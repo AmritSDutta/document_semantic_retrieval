@@ -1,12 +1,15 @@
 import logging
+import subprocess
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
 
-from app.config.config import get_settings
+from app.config.Settings import get_settings
 from app.config.logging_config import setup_logging
-from app.routes.hello import router as hello_router
+from app.database.data.batch_insert_resume import batch_insert_async
+from app.database.vector_db import db
+from app.routers import app_router
 
 # Initialize global logging before other imports
 setup_logging()
@@ -15,18 +18,25 @@ app_name = get_settings().APP_NAME
 port = get_settings().PORT
 
 
+def _verify_tests_pass():
+    subprocess.run(["pytest", "-q"], check=True)
+
+
 @asynccontextmanager
 async def lifespan(app_ins: FastAPI):
     logging.info(f'start: {app_ins.__str__()}')
+    #_verify_tests_pass()
+    await db.init()
+    await batch_insert_async()
     try:
         yield
     finally:
+        await db.close()
         logging.info('finish')
 
 
-app = FastAPI(title="Simple API")
-
-app.include_router(hello_router)
+app = FastAPI(title=app_name, lifespan=lifespan)
+app.include_router(app_router.router, prefix="/api")
 
 
 @app.get("/")
@@ -35,5 +45,5 @@ async def health():
     return {"health": "Server in fine health"}
 
 
-if __name__ == "__main__":
+if __name__ == " __main__":
     uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)
