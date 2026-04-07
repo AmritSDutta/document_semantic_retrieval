@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     DB_USER: str = 'user'
     DB_PASSWORD: str = 'password'
     CSV_FILE: str = 'data/wine_reviews.csv'
+    TRAINING_FILE: str = 'data/resume_filtered.jsonl'
     BATCH_SIZE: int = 10
     SLEEP_BETWEEN_BATCHES: int = 2
     EMBEDDER: str = 'genai'
@@ -71,6 +72,14 @@ class Settings(BaseSettings):
         path = self.BASE_DIR / self.CSV_FILE
         if not path.exists():
             raise FileNotFoundError(f"CSV file not found at {path}")
+        return path
+
+    @property
+    def training_file_path(self) -> Path:
+        """Return absolute, validated path to the CSV."""
+        path = self.BASE_DIR / self.TRAINING_FILE
+        if not path.exists():
+            raise FileNotFoundError(f"training file not found at {path}")
         return path
 
     class Config:

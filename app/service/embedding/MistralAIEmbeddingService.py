@@ -17,7 +17,7 @@ class MistralAIEmbeddingService(EmbeddingService):
 
     def embed(self, texts: str, task_type: str = None,
               output_dimensionality: int = None) -> list[float] | None:
-        """google genai embedding for text collections."""
+        """mistral ai embedding for text collections."""
         resp = self.client.embeddings.create(
             model=self.model,
             inputs=[texts],

@@ -72,7 +72,7 @@ async def get_classifier_models(provider: str | None) -> tuple[BaseChatModel | N
     elif provider.lower() == settings.MISTRAL_PROVIDER_IDENTIFIER:
 
         llm = ChatMistralAI(  # type: ignore
-            model=settings.MISTRAL_LLM_MODEL,
+            model= settings.MISTRAL_LLM_MODEL,
         )
     else:
         api_key = os.getenv(settings.OLLAMA_KEY_STRING)
