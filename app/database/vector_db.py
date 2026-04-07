@@ -76,6 +76,8 @@ class VectorDb:
         logging.info(f'query: {sql}')
         async with self._pool.acquire() as conn:
             rows = await conn.fetch(sql, arr_literal, k)
+            logging.info(f'found rows: {rows}')
+
         return [DocumentRecord(name=r['name'], resume_id=r['resume_id'], category=r['category'],
                                education=r['education'], skills=r["skills"], summary=r["summary"]) for r in rows]
 

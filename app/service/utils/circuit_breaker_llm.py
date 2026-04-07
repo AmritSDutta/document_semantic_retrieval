@@ -10,6 +10,7 @@ from tenacity import stop_after_attempt, wait_exponential, retry
 from tenacity.asyncio import retry_if_exception
 
 from app.config.Settings import Settings
+from app.schema.exceptions import ProviderUnavailableError
 from app.service.llms.LangChainChatLLM import get_chat_llm
 
 breaker = CircuitBreaker(fail_max=5, timeout_duration=timedelta(seconds=30))
@@ -37,7 +38,8 @@ async def call_llm_safely(
         logging.info(f"usage metadata: {response.usage_metadata}")
         return response
     except Exception as e:
-        logging.error(f"Trying alternative, attempts exhausted / circuit open: {e}")
+        msg = str(e)
+        logging.error(f"Primary provider failed, trying alternative: {msg}")
         try:
             llm = await get_chat_llm(settings.FALLBACK_PROVIDER_IDENTIFIER)
             response = await llm.ainvoke(full_context)
@@ -45,7 +47,15 @@ async def call_llm_safely(
             logging.info(f"usage metadata: {response.usage_metadata}")
             return response
         except Exception as ae:
-            logging.error(f"trying alternative failed too: {ae}")
+            msg_ae = str(ae)
+            logging.error(f"Fallback alternative failed too: {msg_ae}")
+            
+            # Map common upstream error strings to our custom exception
+            if any(x in msg_ae for x in ("UNAVAILABLE", "503", "429", "RESOURCE_EXHAUSTED")):
+                raise ProviderUnavailableError(
+                    message=f"All configured LLM providers are currently unavailable or rate-limited: {msg_ae}",
+                    provider="Multi-Provider-Chain"
+                )
             raise ae
 
 
