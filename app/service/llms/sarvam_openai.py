@@ -1,10 +1,8 @@
 import os
 
-from flow_agent.configurations.logging_config import setup_logging
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 
-setup_logging()
 client = ChatOpenAI(
     model="sarvam-30b",
     base_url="https://api.sarvam.ai/v1",

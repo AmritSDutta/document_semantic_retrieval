@@ -32,12 +32,12 @@ class Settings(BaseSettings):
     SLEEP_IN_SECONDS: int = 1
 
     # MODEL choices
-    OLLAMA_SUMMARIZATION_MODEL: str = 'nemotron-3-nano:30b-cloud'
-    MISTRAL_SUMMARIZATION_MODEL: str = 'mistral-medium-2508'
-    ZHIPU_SUMMARIZATION_MODEL: str = 'GLM-4.7-Flash'
-    GEMINI_SUMMARIZATION_MODEL: str = 'gemini-2.5-flash-lite'  # 'gemma-3-27b-it'
-    OPENAI_SUMMARIZATION_MODEL: str = 'gpt-5-nano'
-    SARVAM_SUMMARIZATION_IDENTIFIER: str = 'sarvam-30b'  # sarvam-30b, sarvam-105b
+    OLLAMA_LLM_MODEL: str = 'nemotron-3-nano:30b-cloud'
+    MISTRAL_LLM_MODEL: str = 'mistral-medium-2508'
+    ZHIPU_LLM_MODEL: str = 'GLM-4.7-Flash'
+    GEMINI_LLM_MODEL: str = 'gemini-2.5-flash-lite'  # 'gemma-3-27b-it'
+    OPENAI_LLM_MODEL: str = 'gpt-5-nano'
+    SARVAM_LLM_IDENTIFIER: str = 'sarvam-30b'  # sarvam-30b, sarvam-105b
 
     GEMINI_PROVIDER_IDENTIFIER: str = 'gemini'
     OPENAI_PROVIDER_IDENTIFIER: str = 'openai'
@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     OLLAMA_KEY_STRING: str = "OLLAMA_API_KEY"
     ZHIPU_KEY_STRING: str = "ZAI_API_KEY"
 
-    SUMMARIZATION_PROVIDER_DISTRIBUTION: dict = {
+    LLM_PROVIDER_DISTRIBUTION: dict = {
         MISTRAL_PROVIDER_IDENTIFIER: 0.3,
         OLLAMA_PROVIDER_IDENTIFIER: 0.29,
         SARVAM_PROVIDER_IDENTIFIER: 5.92,

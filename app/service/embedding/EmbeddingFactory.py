@@ -8,10 +8,12 @@ from app.service.embedding.genai_service import GenAIEmbeddingService
 def get_embedding_service():
     settings = Settings()
     if settings.EMBEDDER == "genai":
-        logging.info(f'embedding {settings.EMBEDDER} model to be used: {settings.EMBEDDING_MODEL}, DIMENSION: {settings.EMBED_DIM}')
+        logging.info(
+            f'embedding {settings.EMBEDDER} model to be used: {settings.EMBEDDING_MODEL}, DIMENSION: {settings.EMBED_DIM}')
         return GenAIEmbeddingService()
     elif settings.EMBEDDER == "mistralai":
-        logging.info(f'embedding {settings.EMBEDDER} model to be used: {settings.EMBEDDING_MODEL}, DIMENSION: {settings.EMBED_DIM}')
+        logging.info(
+            f'embedding {settings.EMBEDDER} model to be used: {settings.EMBEDDING_MODEL}, DIMENSION: {settings.EMBED_DIM}')
         return MistralAIEmbeddingService()
 
     raise RuntimeError("unsupported embedder")
