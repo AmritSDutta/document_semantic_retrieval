@@ -9,38 +9,33 @@ from pgvector.psycopg2 import register_vector
 from psycopg2.extras import execute_values
 
 from app.config.Settings import get_settings
-from app.database.custom_embedding import get_gemini_embedding
 from app.service.embedding.EmbeddingFactory import get_embedding_service
 
 
 # -----------------------------------------------------------------------------
 # Embedding Helper
 # -----------------------------------------------------------------------------
-def _get_custom_embedding(text: str):
+def _get_custom_embedding(texts: list[str]):
     """Generate a Gemini embedding for a given text."""
     embedding_service = get_embedding_service()
-    return embedding_service.embed_batch(text)
-    '''
-    return get_gemini_embedding(
-        input_sentence=text,
-        specific_task_type="retrieval_document",
-        dim=get_settings().EMBED_DIM
-    )
-    '''
+    return embedding_service.embed_batch(texts)
+
 
 def _process_in_batches(cur, data):
     total_rows = len(data)
+
     for start in range(0, total_rows, get_settings().BATCH_SIZE):
         end = min(start + get_settings().BATCH_SIZE, total_rows)
         batch_df = data.iloc[start:end].copy()
         print(f"Processing rows {start}–{end} of {total_rows}")
 
-        # Compute embeddings for this batch
-        batch_df["embeddings"] = batch_df["overall"].apply(_get_custom_embedding)
-
+        texts_to_embed:  list[str] = batch_df["overall"].tolist()
+        embeddings = _get_custom_embedding(texts_to_embed)
+        batch_df["embeddings"] = embeddings
         # Prepare tuples for insertion
         data_list = [
-            (row["ResumeID"], row["Name"], row["Category"], row["Education"], row["Skills"], row["Summary"], np.array(row["embeddings"]))
+            (row["ResumeID"], row["Name"], row["Category"], row["Education"], row["Skills"], row["Summary"],
+             np.array(row["embeddings"]))
             for _, row in batch_df.iterrows()
         ]
 

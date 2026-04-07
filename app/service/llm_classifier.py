@@ -5,9 +5,12 @@ from typing import Optional
 
 from google import genai
 from google.genai.types import GenerateContentResponse
+from langchain_core.messages import HumanMessage
 from pydantic import ValidationError
 
 from app.schema.document_record import ClassificationResult
+from app.service.llms.LangChainChatLLM import get_chat_llm
+from app.service.utils.circuit_breaker_llm import call_llm_safely
 
 
 class ClassifyLLMService:
@@ -22,11 +25,21 @@ class ClassifyLLMService:
         self.backoff = backoff
         self._schema = ClassificationResult.model_json_schema()
 
+    async def llmClassifyRequest(self, passage: str) -> ClassificationResult:
+        prompt = self._build_base_prompt(passage)
+        llm = await get_chat_llm(is_summarizer=True)  # Uses weighted provider selection
+        response = await call_llm_safely(llm, [], HumanMessage(content=prompt))
+        summary = response.content if hasattr(response, 'content') else str(response)
+
+        # summary.strip().removeprefix('```json').removesuffix('```').strip()
+        summary = summary.split('```json', 1)[-1].split('```', 1)[0].strip()
+        logging.info(f'Model output : {summary}')
+        return ClassificationResult.model_validate_json(summary)
+
     def classify(self, passage: str) -> ClassificationResult:
         prompt = self._build_base_prompt(passage)
         logging.info(f'Model in use : {self.model}')
         attempt = 1
-        last_text: Optional[str] = None
         last_exc: Optional[Exception] = None
 
         while attempt <= self.max_attempts:
@@ -43,7 +56,6 @@ class ClassifyLLMService:
             )
             self._log_token_usage(resp)
             text = (resp.text or "").strip()
-            last_text = text
             try:
                 return ClassificationResult.model_validate_json(text)
             except ValidationError as ve:

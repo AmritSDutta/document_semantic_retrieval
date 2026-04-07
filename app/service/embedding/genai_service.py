@@ -1,6 +1,8 @@
 import logging
 from typing import Sequence, List
+
 from google import genai
+
 from .base import EmbeddingService
 from ...config.Settings import Settings
 

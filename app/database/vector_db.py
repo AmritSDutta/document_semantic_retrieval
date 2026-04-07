@@ -7,7 +7,6 @@ import asyncpg
 import numpy as np
 
 from app.config.Settings import get_settings
-from app.database.custom_embedding import get_gemini_embedding
 from app.schema.document_record import DocumentRecord
 from app.service.embedding.EmbeddingFactory import get_embedding_service
 

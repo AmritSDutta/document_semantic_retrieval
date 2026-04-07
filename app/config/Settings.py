@@ -24,8 +24,45 @@ class Settings(BaseSettings):
     CSV_FILE: str = 'data/wine_reviews.csv'
     BATCH_SIZE: int = 10
     SLEEP_BETWEEN_BATCHES: int = 2
-    EMBEDDER: str = 'mistralai'
+    EMBEDDER: str = 'genai'
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent  # points to project_root
+
+    # circuit breaker
+    MAX_TRY: int = 3
+    SLEEP_IN_SECONDS: int = 1
+
+    # MODEL choices
+    OLLAMA_SUMMARIZATION_MODEL: str = 'nemotron-3-nano:30b-cloud'
+    MISTRAL_SUMMARIZATION_MODEL: str = 'mistral-medium-2508'
+    ZHIPU_SUMMARIZATION_MODEL: str = 'GLM-4.7-Flash'
+    GEMINI_SUMMARIZATION_MODEL: str = 'gemini-2.5-flash-lite'  # 'gemma-3-27b-it'
+    OPENAI_SUMMARIZATION_MODEL: str = 'gpt-5-nano'
+    SARVAM_SUMMARIZATION_IDENTIFIER: str = 'sarvam-30b'
+
+    GEMINI_PROVIDER_IDENTIFIER: str = 'gemini'
+    OPENAI_PROVIDER_IDENTIFIER: str = 'openai'
+    ZHIPU_PROVIDER_IDENTIFIER: str = 'zhipu'
+    OLLAMA_PROVIDER_IDENTIFIER: str = 'ollama'
+    FALLBACK_PROVIDER_IDENTIFIER: str = 'gemini'
+    SARVAM_PROVIDER_IDENTIFIER: str = 'sarvam'
+    MISTRAL_PROVIDER_IDENTIFIER: str = 'mistral'
+
+    OLLAMA_BASE_URL: str = "https://ollama.com"
+    ZHIPU_BASE_URL: str = "https://api.z.ai/api/paas/v4/"
+    OLLAMA_KEY_STRING: str = "OLLAMA_API_KEY"
+    ZHIPU_KEY_STRING: str = "ZAI_API_KEY"
+
+    SUMMARIZATION_PROVIDER_DISTRIBUTION: dict = {
+        MISTRAL_PROVIDER_IDENTIFIER: 0.3,
+        OLLAMA_PROVIDER_IDENTIFIER: 0.29,
+        SARVAM_PROVIDER_IDENTIFIER: 5.92,
+        GEMINI_PROVIDER_IDENTIFIER: 0.01,
+        ZHIPU_PROVIDER_IDENTIFIER: 0.01,
+        OPENAI_PROVIDER_IDENTIFIER: 0.01,
+    }
+
+    MODERATION_API_CHECK_REQ: bool = True
+    MODERATION_MODEL: str = 'omni-moderation-latest'  # OpenAI (omni-moderation-latest) -> text + image
 
     @property
     def csv_file_path(self) -> Path:

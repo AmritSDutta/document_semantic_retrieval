@@ -1,5 +1,5 @@
 import os
-from typing import Sequence, List
+from typing import Sequence
 
 from mistralai.client import Mistral
 
