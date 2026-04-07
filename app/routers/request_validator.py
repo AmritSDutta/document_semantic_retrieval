@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from openai import OpenAI, RateLimitError, APIError, APIConnectionError
 
 from app.config.Settings import Settings
+logger = logging.getLogger(__name__)
 
 MALICIOUS_PATTERNS = [
     r"(?i)\b(eval|exec|__import__|os\.system|subprocess|popen|open)\b",

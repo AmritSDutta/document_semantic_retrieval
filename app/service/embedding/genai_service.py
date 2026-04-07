@@ -7,6 +7,9 @@ from .base import EmbeddingService
 from ...config.Settings import Settings
 
 
+logger = logging.getLogger(__name__)
+
+
 class GenAIEmbeddingService(EmbeddingService):
     """google genai embedding implementation as EmbeddingService."""
     def __init__(self, api_key: str = None):

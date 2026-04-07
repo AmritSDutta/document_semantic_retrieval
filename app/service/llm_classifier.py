@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from app.schema.document_record import ClassificationResult
 from app.service.llms.LangChainChatLLM import get_chat_llm
 from app.service.utils.circuit_breaker_llm import call_llm_safely
+logger = logging.getLogger(__name__)
 
 
 class ClassifyLLMService:

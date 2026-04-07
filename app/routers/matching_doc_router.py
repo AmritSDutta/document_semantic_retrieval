@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict
+from typing import List, Dict, LiteralString
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 
@@ -77,8 +77,8 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
     return docs
 
 
-@doc_router.post("/train_classic_ml", status_code=200, response_model=Dict[str, str])
-async def search_docs() -> Dict[str, str]:
+@doc_router.post("/train_classic_ml", status_code=200, response_model=Dict[int, str])
+async def search_docs() -> Dict[int, str]:
     """
     Retrieve items by category with an optional limit.
     """

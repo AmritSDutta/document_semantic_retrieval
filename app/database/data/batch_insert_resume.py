@@ -12,6 +12,9 @@ from app.config.Settings import get_settings
 from app.service.embedding.EmbeddingFactory import get_embedding_service
 
 
+logger = logging.getLogger(__name__)
+
+
 # -----------------------------------------------------------------------------
 # Embedding Helper
 # -----------------------------------------------------------------------------
@@ -27,7 +30,7 @@ def _process_in_batches(cur, data):
     for start in range(0, total_rows, get_settings().BATCH_SIZE):
         end = min(start + get_settings().BATCH_SIZE, total_rows)
         batch_df = data.iloc[start:end].copy()
-        print(f"Processing rows {start}–{end} of {total_rows}")
+        logging.info(f"Processing rows {start}–{end} of {total_rows}")
 
         texts_to_embed:  list[str] = batch_df["overall"].tolist()
         embeddings = _get_custom_embedding(texts_to_embed)
@@ -45,7 +48,7 @@ def _process_in_batches(cur, data):
             f"INSERT INTO {get_settings().TABLE_NAME} (resume_id, name, category,education, skills, summary, embedding) VALUES %s",
             data_list,
         )
-        print(f"Inserted {len(data_list)} rows into DB")
+        logging.info(f"Inserted {len(data_list)} rows into DB")
 
         # Sleep briefly to prevent 429 rate limit
         time.sleep(get_settings().SLEEP_BETWEEN_BATCHES)
@@ -72,8 +75,8 @@ def _do_batch_insert():
         # Load CSV and subset
         pd_data = pd.read_json(get_settings().csv_file_path, lines=True)
         data = pd_data.iloc[1:48].copy()
-        print(f"Processing rows {pd_data.columns} into DB")
-        print(f"Total rows selected from CSV: {len(data)}")
+        logging.info(f"Processing rows {pd_data.columns} into DB")
+        logging.info(f"Total rows selected from CSV: {len(data)}")
 
         # Create target table
         table_create_sql = f"""
@@ -131,6 +134,6 @@ async def batch_insert_async():
     """Skip if table exists, else perform insert asynchronously."""
     exists = await asyncio.to_thread(table_exists, get_settings().TABLE_NAME)
     if exists:
-        print(f"Table '{get_settings().TABLE_NAME}' already exists — skipping insert.")
-        return
+        logging.info(f"Table '{get_settings().TABLE_NAME}' already exists — skipping insert.")
+        return None
     return await asyncio.to_thread(_do_batch_insert)

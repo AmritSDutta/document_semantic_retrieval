@@ -4,6 +4,8 @@ from app.config.Settings import Settings
 from app.service.embedding.MistralAIEmbeddingService import MistralAIEmbeddingService
 from app.service.embedding.genai_service import GenAIEmbeddingService
 
+logger = logging.getLogger(__name__)
+
 
 def get_embedding_service():
     settings = Settings()

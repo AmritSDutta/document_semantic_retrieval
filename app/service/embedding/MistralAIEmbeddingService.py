@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Sequence
 
@@ -6,6 +7,8 @@ from mistralai.client import Mistral
 from app.config.Settings import Settings
 from app.service.embedding.base import EmbeddingService
 
+
+logger = logging.getLogger(__name__)
 
 class MistralAIEmbeddingService(EmbeddingService):
     def __init__(self, api_key: str = None):

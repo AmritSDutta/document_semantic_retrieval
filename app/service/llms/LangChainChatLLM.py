@@ -14,6 +14,7 @@ from app.config.Settings import Settings
 
 random.seed(1234)
 settings = Settings()
+logger = logging.getLogger(__name__)
 
 
 def _get_random_llm_provider():
