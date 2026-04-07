@@ -13,6 +13,7 @@ class DocumentService:
         self.repo = repo
 
     async def get_matching_docs(self, search_term: str, how_many: int = 3) -> List[DocumentRecord] | None:
+        logging.info(f'inside async get_matching_docs, searching: {search_term}')
         docs: List[DocumentRecord] = await self.repo.get_top_k_docs(search_term, how_many)
         return docs
 

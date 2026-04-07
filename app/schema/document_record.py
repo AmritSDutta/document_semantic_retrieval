@@ -4,7 +4,7 @@ from pydantic import BaseModel, constr, Field, conint, ConfigDict
 
 
 class SearchRequest(BaseModel):
-    search_term: constr(max_length=100) = Field(
+    search_term: constr(max_length=1000) = Field(
         ...,
         json_schema_extra={"example": "foo"},
         description="Search term (max 100 characters)"
@@ -37,6 +37,15 @@ class ClassificationResult(BaseModel):
     @property
     def sorted_result(self) -> List[Topic]:
         return sorted(self.result, key=lambda t: t.confidence, reverse=True)
+
+    @property
+    def derive_relevant_topic(self, n: int = 5) -> str:
+        sorted_topic = sorted(self.result, key=lambda t: t.confidence, reverse=True)
+        op_n_topics = sorted_topic[:n]
+
+        # 3. Extract just the names and join them with a comma
+        top_names = [topic.name for topic in op_n_topics]
+        return ", ".join(top_names)
 
 
 class PassageRequest(BaseModel):

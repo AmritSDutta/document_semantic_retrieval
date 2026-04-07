@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     ZHIPU_SUMMARIZATION_MODEL: str = 'GLM-4.7-Flash'
     GEMINI_SUMMARIZATION_MODEL: str = 'gemini-2.5-flash-lite'  # 'gemma-3-27b-it'
     OPENAI_SUMMARIZATION_MODEL: str = 'gpt-5-nano'
-    SARVAM_SUMMARIZATION_IDENTIFIER: str = 'sarvam-30b'
+    SARVAM_SUMMARIZATION_IDENTIFIER: str = 'sarvam-30b'  # sarvam-30b, sarvam-105b
 
     GEMINI_PROVIDER_IDENTIFIER: str = 'gemini'
     OPENAI_PROVIDER_IDENTIFIER: str = 'openai'
@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     }
 
     MODERATION_API_CHECK_REQ: bool = True
+    SANITIZATION_REQUIRED: bool = True
     MODERATION_MODEL: str = 'omni-moderation-latest'  # OpenAI (omni-moderation-latest) -> text + image
 
     @property

@@ -5,6 +5,8 @@ import re
 from fastapi import HTTPException
 from openai import OpenAI, RateLimitError, APIError, APIConnectionError
 
+from app.config.Settings import Settings
+
 MALICIOUS_PATTERNS = [
     r"(?i)\b(eval|exec|__import__|os\.system|subprocess|popen|open)\b",
     r"(<script\b|javascript:|on\w+\=)",  # XSS
@@ -12,7 +14,10 @@ MALICIOUS_PATTERNS = [
 ]
 
 
-def sanitize_passage(user_input: str, max_len=5000):
+def sanitize_passage(user_input: str, max_len=5000) -> str:
+    settings = Settings()
+    if not settings.SANITIZATION_REQUIRED:
+        return ""
     if not isinstance(user_input, str):
         raise HTTPException(400, "Invalid type")
     user_input = user_input.strip()
@@ -39,12 +44,16 @@ def do_moderation_checking(user_input: str) -> None:
     """
     last frontier , check with LLM moderation model
     """
+    settings = Settings()
+    if not settings.MODERATION_API_CHECK_REQ:
+        return
+
     logging.info('starting moderation checking')
     client = OpenAI()
 
     try:
         resp = client.moderations.create(
-            model="omni-moderation-latest",
+            model= settings.MODERATION_MODEL,
             input=user_input
         )
 
@@ -52,8 +61,9 @@ def do_moderation_checking(user_input: str) -> None:
             logging.info('moderation check failed:{}'.format(resp))
             raise HTTPException(status_code=403, detail="Malicious content detected")
 
-    except RateLimitError:
+    except RateLimitError as e:
         # Fail closed (block the request)
+        logging.info('moderation check failed:{}'.format(e))
         raise HTTPException(status_code=429, detail="Moderation rate limit hit")
 
     except (APIError, APIConnectionError) as e:
