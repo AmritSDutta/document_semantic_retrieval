@@ -56,7 +56,7 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) ->
 
 @doc_router.post("/search_requirement", status_code=200, response_model=List[DocumentRecord],
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
-async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
+async def classify_and_search(passage: str = Body(..., embed=True, max_length=5000),
                        svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
     logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
 
@@ -64,8 +64,8 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
     await do_moderation_checking(passage)
     passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
     logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
-    classificationResult: ClassificationResult = await llm.llmClassifyRequest(passage_redacted[0])
-    derived_topic: str = classificationResult.derive_relevant_topic.strip()
+    classification_result: ClassificationResult = await llm.llmClassifyRequest(passage_redacted[0])
+    derived_topic: str = classification_result.derive_relevant_topic.strip()
     docs: List[DocumentRecord] = await svc.get_matching_docs(derived_topic, limit)
     return docs
 
@@ -83,7 +83,7 @@ async def search_docs() -> Dict[int, str]:
 
 @doc_router.post("/search_through_classic_ml", status_code=200, response_model=List[DocumentRecord],
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
-async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
+async def classify_and_search_classic_ml(passage: str = Body(..., embed=True, max_length=5000),
                        svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
     from app.service.classic_ml.berttopic_modeling import infer_topic_model
     logger.info(f'received req: passage to be classified through classic ml-> {passage[:100]} ....')
