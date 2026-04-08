@@ -1,12 +1,28 @@
 import html
 import logging
+import os
 import re
+from datetime import timedelta
 
+from aiobreaker import CircuitBreaker, CircuitBreakerError
 from fastapi import HTTPException
-from openai import OpenAI, RateLimitError, APIError, APIConnectionError
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 from app.config.Settings import Settings
+from app.schema.exceptions import ProviderUnavailableError
+
 logger = logging.getLogger(__name__)
+
+moderation_circuit_breaker = CircuitBreaker(
+    fail_max=4,
+    timeout_duration=timedelta(seconds=30)
+)
+
+
+async def _should_retry(exc: BaseException) -> bool:
+    # Retry everything EXCEPT when circuit is open
+    return not isinstance(exc, CircuitBreakerError)
+
 
 MALICIOUS_PATTERNS = [
     r"(?i)\b(eval|exec|__import__|os\.system|subprocess|popen|open)\b",
@@ -41,10 +57,90 @@ def sanitize_passage(user_input: str, max_len=5000) -> str:
     return clean
 
 
-def do_moderation_checking(user_input: str) -> None:
+async def do_moderation_checking(user_input: str) -> None:
     """
     last frontier , check with LLM moderation model
     """
+    settings = Settings()
+    if not settings.MODERATION_API_CHECK_REQ:
+        return
+
+    try:
+        await do_moderation_checking_openai(user_input)
+    except Exception as e:
+        msg = str(e)
+        logging.error(f"Primary moderation provider failed, trying alternative: {msg}")
+        try:
+            await do_moderation_checking_mistral(user_input)
+        except Exception as ae:
+            msg_ae = str(ae)
+            logging.error(f"Fallback alternative failed too: {msg_ae}")
+
+            # Map common upstream error strings to our custom exception
+            if any(x in msg_ae for x in ("UNAVAILABLE", "503", "429", "RESOURCE_EXHAUSTED")):
+                raise ProviderUnavailableError(
+                    message=f"All configured Moderation providers are currently unavailable or rate-limited: {msg_ae}",
+                    provider="Multi-Provider-Chain"
+                )
+            raise ae
+
+
+async def do_moderation_checking_mistral(user_input: str) -> None:
+    """
+    last frontier , check with LLM moderation model
+    """
+    from mistralai.client import Mistral
+    from mistralai.client.models import ModerationResponse
+
+    settings = Settings()
+    if not settings.MODERATION_API_CHECK_REQ:
+        return
+
+    logging.info('starting moderation checking')
+    client = Mistral(api_key=os.getenv('MISTRAL_API_KEY'))
+
+    try:
+        response: ModerationResponse = client.classifiers.moderate(
+            model="mistral-moderation-2603",
+            inputs=[user_input]
+        )
+        logging.info(f"Moderation mistral check result: {response}")
+
+        # Check if any category is flagged
+        for result in response.results:
+            categories_to_check = \
+                {k: v for k, v in result.categories.items() if k != "pii"}
+
+            if any(categories_to_check.values()):
+                logging.warning(
+                    f"Moderation check failed for input: {user_input}\n"
+                    f"Category scores: {result.category_scores}"
+                )
+                raise HTTPException(
+                    status_code=403,
+                    detail="Malicious content detected"
+                )
+
+    except Exception as e:
+        logging.error(f"Moderation service error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Moderation service unavailable: {e}"
+        )
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(min=1, max=3),
+    retry=retry_if_exception(_should_retry),
+    reraise=True,
+)
+@moderation_circuit_breaker
+async def do_moderation_checking_openai(user_input: str) -> None:
+    """
+    last frontier , check with LLM moderation model
+    """
+    from openai import OpenAI, RateLimitError, APIError, APIConnectionError
     settings = Settings()
     if not settings.MODERATION_API_CHECK_REQ:
         return
@@ -53,13 +149,14 @@ def do_moderation_checking(user_input: str) -> None:
     client = OpenAI()
 
     try:
-        resp = client.moderations.create(
-            model= settings.MODERATION_MODEL,
+        response = client.moderations.create(
+            model=settings.MODERATION_MODEL,
             input=user_input
         )
+        logging.info(f"Moderation openai check result: {response}")
 
-        if any(result.flagged for result in resp.results):
-            logging.info('moderation check failed:{}'.format(resp))
+        if any(result.flagged for result in response.results):
+            logging.info('moderation check failed:{}'.format(response))
             raise HTTPException(status_code=403, detail="Malicious content detected")
 
     except RateLimitError as e:

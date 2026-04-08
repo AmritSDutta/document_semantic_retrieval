@@ -34,7 +34,7 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
     logger.info(f'Received req: query -> {req.search_term.strip()}, limit -> {req.limit}')
 
     passage: str = sanitize_passage(req.search_term.strip())
-    do_moderation_checking(passage)
+    await do_moderation_checking(passage)
     passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
     logger.info(f'Redacted req: query -> {passage_redacted[0]}, limit -> {req.limit}')
     docs: List[DocumentRecord] = await svc.get_matching_docs(passage_redacted[0], req.limit)
@@ -47,7 +47,7 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) ->
     logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
 
     passage: str = sanitize_passage(passage)
-    do_moderation_checking(passage)
+    await do_moderation_checking(passage)
     passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
     logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
     docs = await llm.llmClassifyRequest(passage_redacted[0])
@@ -61,7 +61,7 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
     logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
 
     passage: str = sanitize_passage(passage)
-    do_moderation_checking(passage)
+    await do_moderation_checking(passage)
     passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
     logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
     classificationResult: ClassificationResult = await llm.llmClassifyRequest(passage_redacted[0])
@@ -89,7 +89,7 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
     logger.info(f'received req: passage to be classified through classic ml-> {passage[:100]} ....')
 
     passage: str = sanitize_passage(passage)
-    do_moderation_checking(passage)
+    await do_moderation_checking(passage)
     passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
     logger.info(f'Redacted passage to be classified through classic ml-> {passage_redacted[0][:100]} ....')
     result: List[Dict[str, str]] = infer_topic_model(passage_redacted[0])
