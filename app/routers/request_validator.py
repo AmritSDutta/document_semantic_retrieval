@@ -85,6 +85,12 @@ async def do_moderation_checking(user_input: str) -> None:
             raise ae
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(min=1, max=3),
+    retry=retry_if_exception(_should_retry),
+    reraise=True,
+)
 async def do_moderation_checking_mistral(user_input: str) -> None:
     """
     last frontier , check with LLM moderation model
