@@ -67,6 +67,9 @@ class Settings(BaseSettings):
     MODERATION_MODEL: str = 'omni-moderation-latest'  # OpenAI (omni-moderation-latest) -> text + image
     API_INTERNAL_KEY: str = "your-super-secret-key"
 
+    PII_CONFIDENCE_THRESHOLD: float = 0.5
+    IS_PII_REDACTION_ENABLED: bool = True
+
     @property
     def csv_file_path(self) -> Path:
         """Return absolute, validated path to the CSV."""

@@ -18,6 +18,10 @@ A high-performance semantic search and document classification system built with
     *   **Rate Limiting**: IP-based rate limiting to prevent abuse and "denial-of-wallet" attacks.
     *   **CORS Protection**: Restricted access to authorized frontend origins.
     *   **Input Sanitization**: Built-in XSS and malicious pattern detection.
+    *   **PII Redaction**: Automatic detection and redaction of Personally Identifiable Information (PII) to ensure data privacy.
+        *   *Example:*
+            *   **Raw Query**: `my Name is Kimberlay Dutta, age 49, need java developers, limit -> 3`
+            *   **Redacted Query**: `my Name is <PERSON>, <DATE_TIME>, need java developers, limit -> 3`
 *   **Interactive UI**: A rich Streamlit dashboard for searching, classifying, and training models.
 
 ---
@@ -27,8 +31,8 @@ A high-performance semantic search and document classification system built with
 *   **Backend**: Python 3.11, FastAPI, Uvicorn, Pydantic v2.
 *   **Frontend**: Streamlit.
 *   **Database**: PostgreSQL with `pgvector`.
-*   **AI/ML**: Google Gemini, MistralAI, LangChain, BERTopic, Scikit-learn.
-*   **Resilience**: `aiobreaker`, `tenacity`.
+*   **AI/ML**: Google Gemini, MistralAI, LangChain, BERTopic, Scikit-learn, Sentence-transformers.
+*   **Resilience & Security**: `aiobreaker`, `tenacity`, `fastapi-limiter`, `pyrate-limiter`, `presidio-analyzer`.
 
 ---
 

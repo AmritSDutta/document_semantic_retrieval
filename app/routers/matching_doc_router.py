@@ -12,10 +12,12 @@ from app.schema.document_record import DocumentRecord, SearchRequest, Classifica
 from app.service.document_service import DocumentService
 from app.service.llm_classifier import ClassifyLLMService
 from app.service.utils.auth import get_api_key
+from app.service.utils.pii_redaction import PII_Redactor
 
 logger = logging.getLogger(__name__)
 doc_router = APIRouter(prefix="/docs", tags=["docs"], dependencies=[Security(get_api_key)])
 llm = ClassifyLLMService()
+pii_redactor = PII_Redactor()
 
 
 def get_document_service(db: VectorDb = Depends(get_db)) -> DocumentService:
@@ -29,18 +31,26 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
     """
     Retrieve items by category with an optional limit.
     """
-    logger.info(f'received req: query -> {req.search_term.strip()}, limit -> {req.limit}')
-    docs: List[DocumentRecord] = await svc.get_matching_docs(req.search_term.strip(), req.limit)
+    logger.info(f'Received req: query -> {req.search_term.strip()}, limit -> {req.limit}')
+
+    passage: str = sanitize_passage(req.search_term.strip())
+    do_moderation_checking(passage)
+    passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
+    logger.info(f'Redacted req: query -> {passage_redacted[0]}, limit -> {req.limit}')
+    docs: List[DocumentRecord] = await svc.get_matching_docs(passage_redacted[0], req.limit)
     return docs
 
 
 @doc_router.post("/classify", status_code=200, response_model=ClassificationResult,
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
 async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) -> ClassificationResult:
+    logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
+
     passage: str = sanitize_passage(passage)
     do_moderation_checking(passage)
-    logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
-    docs = await llm.llmClassifyRequest(passage)
+    passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
+    logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
+    docs = await llm.llmClassifyRequest(passage_redacted[0])
     return ClassificationResult(result=docs.sorted_result)
 
 
@@ -48,10 +58,13 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) ->
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
 async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
                        svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
+    logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
+
     passage: str = sanitize_passage(passage)
     do_moderation_checking(passage)
-    logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
-    classificationResult: ClassificationResult = await llm.llmClassifyRequest(passage)
+    passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
+    logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
+    classificationResult: ClassificationResult = await llm.llmClassifyRequest(passage_redacted[0])
     derived_topic: str = classificationResult.derive_relevant_topic.strip()
     docs: List[DocumentRecord] = await svc.get_matching_docs(derived_topic, limit)
     return docs
@@ -72,11 +85,14 @@ async def search_docs() -> Dict[int, str]:
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
 async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
                        svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
+    from app.service.classic_ml.berttopic_modeling import infer_topic_model
+    logger.info(f'received req: passage to be classified through classic ml-> {passage[:100]} ....')
+
     passage: str = sanitize_passage(passage)
     do_moderation_checking(passage)
-    logger.info(f'received req: passage to be classified through classic ml-> {passage[:100]} ....')
-    from app.service.classic_ml.berttopic_modeling import infer_topic_model
-    result: List[Dict[str, str]] = infer_topic_model(passage)
+    passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
+    logger.info(f'Redacted passage to be classified through classic ml-> {passage_redacted[0][:100]} ....')
+    result: List[Dict[str, str]] = infer_topic_model(passage_redacted[0])
     derived_topic = ','.join(set(r['topic_name'] for r in result))
     docs: List[DocumentRecord] = await svc.get_matching_docs(derived_topic, limit)
     return docs
