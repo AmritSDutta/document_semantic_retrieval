@@ -65,6 +65,7 @@ class Settings(BaseSettings):
     MODERATION_API_CHECK_REQ: bool = True
     SANITIZATION_REQUIRED: bool = True
     MODERATION_MODEL: str = 'omni-moderation-latest'  # OpenAI (omni-moderation-latest) -> text + image
+    API_INTERNAL_KEY: str = "your-super-secret-key"
 
     @property
     def csv_file_path(self) -> Path:
@@ -101,6 +102,7 @@ def get_settings() -> Settings:
         print(DOTENV_PATH)
 
         logging.info(f"CWD: {os.getcwd()}")
-        logging.info(f"model_dump: {_settings.model_dump()}")
+        # logging.info(f"model_dump: {_settings.model_dump()}")
+        logging.info(f"Settings Loaded for app: {_settings.APP_NAME}")  # Safe logging
 
     return _settings

@@ -1,7 +1,9 @@
 import logging
-from typing import List, Dict, LiteralString
+from typing import List, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, Body, Security
+from fastapi_limiter.depends import RateLimiter
+from pyrate_limiter import Limiter, Rate, Duration
 
 from app.database.document_repository import DocumentRepository
 from app.database.vector_db import VectorDb, get_db
@@ -9,9 +11,10 @@ from app.routers.request_validator import sanitize_passage, do_moderation_checki
 from app.schema.document_record import DocumentRecord, SearchRequest, ClassificationResult
 from app.service.document_service import DocumentService
 from app.service.llm_classifier import ClassifyLLMService
+from app.service.utils.auth import get_api_key
 
 logger = logging.getLogger(__name__)
-doc_router = APIRouter(prefix="/docs", tags=["docs"])
+doc_router = APIRouter(prefix="/docs", tags=["docs"], dependencies=[Security(get_api_key)])
 llm = ClassifyLLMService()
 
 
@@ -20,7 +23,8 @@ def get_document_service(db: VectorDb = Depends(get_db)) -> DocumentService:
     return DocumentService(DocumentRepository(db))
 
 
-@doc_router.post("/search", status_code=200, response_model=List[DocumentRecord])
+@doc_router.post("/search", status_code=200, response_model=List[DocumentRecord],
+                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
 async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_document_service)) -> List[DocumentRecord]:
     """
     Retrieve items by category with an optional limit.
@@ -30,7 +34,8 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
     return docs
 
 
-@doc_router.post("/classify", status_code=200, response_model=ClassificationResult)
+@doc_router.post("/classify", status_code=200, response_model=ClassificationResult,
+                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
 async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) -> ClassificationResult:
     passage: str = sanitize_passage(passage)
     do_moderation_checking(passage)
@@ -39,7 +44,8 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) ->
     return ClassificationResult(result=docs.sorted_result)
 
 
-@doc_router.post("/search_requirement", status_code=200, response_model=List[DocumentRecord])
+@doc_router.post("/search_requirement", status_code=200, response_model=List[DocumentRecord],
+                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
 async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
                        svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
     passage: str = sanitize_passage(passage)
@@ -51,7 +57,8 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
     return docs
 
 
-@doc_router.post("/train_classic_ml", status_code=200, response_model=Dict[int, str])
+@doc_router.post("/train_classic_ml", status_code=200, response_model=Dict[int, str],
+                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.MINUTE * 15))))])
 async def search_docs() -> Dict[int, str]:
     """
     Retrieve items by category with an optional limit.
@@ -61,7 +68,8 @@ async def search_docs() -> Dict[int, str]:
     return train_topic_model()
 
 
-@doc_router.post("/search_through_classic_ml", status_code=200, response_model=List[DocumentRecord])
+@doc_router.post("/search_through_classic_ml", status_code=200, response_model=List[DocumentRecord],
+                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
 async def classify_doc(passage: str = Body(..., embed=True, max_length=5000),
                        svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
     passage: str = sanitize_passage(passage)
