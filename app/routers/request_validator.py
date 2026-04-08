@@ -6,12 +6,17 @@ from datetime import timedelta
 
 from aiobreaker import CircuitBreaker, CircuitBreakerError
 from fastapi import HTTPException
+from mistralai.client import Mistral
+from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 from app.config.Settings import Settings
 from app.schema.exceptions import ProviderUnavailableError
 
 logger = logging.getLogger(__name__)
+
+mistral_client = Mistral(api_key=os.getenv('MISTRAL_API_KEY'))
+openai_client= OpenAI()
 
 moderation_circuit_breaker = CircuitBreaker(
     fail_max=4,
@@ -34,7 +39,7 @@ MALICIOUS_PATTERNS = [
 def sanitize_passage(user_input: str, max_len=5000) -> str:
     settings = Settings()
     if not settings.SANITIZATION_REQUIRED:
-        return ""
+        return user_input
     if not isinstance(user_input, str):
         raise HTTPException(400, "Invalid type")
     user_input = user_input.strip()
@@ -95,7 +100,6 @@ async def do_moderation_checking_mistral(user_input: str) -> None:
     """
     last frontier , check with LLM moderation model
     """
-    from mistralai.client import Mistral
     from mistralai.client.models import ModerationResponse
 
     settings = Settings()
@@ -103,10 +107,10 @@ async def do_moderation_checking_mistral(user_input: str) -> None:
         return
 
     logging.info('starting moderation checking')
-    client = Mistral(api_key=os.getenv('MISTRAL_API_KEY'))
+
 
     try:
-        response: ModerationResponse = client.classifiers.moderate(
+        response: ModerationResponse = mistral_client.classifiers.moderate(
             model="mistral-moderation-2603",
             inputs=[user_input]
         )
@@ -146,16 +150,15 @@ async def do_moderation_checking_openai(user_input: str) -> None:
     """
     last frontier , check with LLM moderation model
     """
-    from openai import OpenAI, RateLimitError, APIError, APIConnectionError
+    from openai import RateLimitError, APIError, APIConnectionError
     settings = Settings()
     if not settings.MODERATION_API_CHECK_REQ:
         return
 
     logging.info('starting moderation checking')
-    client = OpenAI()
 
     try:
-        response = client.moderations.create(
+        response = openai_client.moderations.create(
             model=settings.MODERATION_MODEL,
             input=user_input
         )
