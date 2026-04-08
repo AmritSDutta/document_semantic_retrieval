@@ -74,7 +74,7 @@ def _do_batch_insert():
 
         # Load CSV and subset
         pd_data = pd.read_json(get_settings().csv_file_path, lines=True)
-        data = pd_data.iloc[1:48].copy()
+        data = pd_data.iloc[:-1].copy()
         logging.info(f"Processing rows {pd_data.columns} into DB")
         logging.info(f"Total rows selected from CSV: {len(data)}")
 

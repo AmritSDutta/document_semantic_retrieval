@@ -14,11 +14,11 @@ logger = logging.getLogger(__name__)
 class Settings(BaseSettings):
     APP_NAME: str = 'Document Search App1'
     PORT: int = 8000
-    TABLE_NAME: str = 'resume_1'   #'wines_4'
+    TABLE_NAME: str = 'resume_details'
     EMBED_DIM: int = 1024
-    DB_DSN: str = 'postgres://user:password@localhost/wine_review_text_vector_search_db'
+    DB_DSN: str = 'postgres://user:password@localhost/resume_vector_db'
     EMBEDDING_MODEL: str = 'models/gemini-embedding-001'
-    DB_NAME: str = 'wine_review_text_vector_search_db'
+    DB_NAME: str = 'resume_vector_db'
     DB_USER: str = 'user'
     DB_PASSWORD: str = 'password'
     CSV_FILE: str = 'data/wine_reviews.csv'
@@ -54,10 +54,10 @@ class Settings(BaseSettings):
     ZHIPU_KEY_STRING: str = "ZAI_API_KEY"
 
     LLM_PROVIDER_DISTRIBUTION: dict = {
-        MISTRAL_PROVIDER_IDENTIFIER: 0.3,
-        OLLAMA_PROVIDER_IDENTIFIER: 0.29,
-        SARVAM_PROVIDER_IDENTIFIER: 5.92,
-        GEMINI_PROVIDER_IDENTIFIER: 0.01,
+        MISTRAL_PROVIDER_IDENTIFIER: 0.4,
+        OLLAMA_PROVIDER_IDENTIFIER: 0.4,
+        SARVAM_PROVIDER_IDENTIFIER: 0.01,
+        GEMINI_PROVIDER_IDENTIFIER: 0.1,
         ZHIPU_PROVIDER_IDENTIFIER: 0.01,
         OPENAI_PROVIDER_IDENTIFIER: 0.01,
     }
