@@ -45,7 +45,7 @@ class TestMatchingDocRouter:
         with patch("app.routers.matching_doc_router.do_moderation_checking", new_callable=AsyncMock) as mock_mod, \
                 patch("app.routers.matching_doc_router.pii_redactor.do_pii_redaction_text",
                       new_callable=AsyncMock) as mock_pii, \
-                patch("app.routers.matching_doc_router.llm.llmClassifyRequest", new_callable=AsyncMock) as mock_llm:
+                patch("app.routers.matching_doc_router.llm.llm_classify_request", new_callable=AsyncMock) as mock_llm:
             mock_pii.return_value = ["Blockchain developers needed"]
             mock_llm.return_value = mock_topics
 
@@ -66,7 +66,7 @@ class TestMatchingDocRouter:
         with patch("app.routers.matching_doc_router.do_moderation_checking", new_callable=AsyncMock) as mock_mod, \
                 patch("app.routers.matching_doc_router.pii_redactor.do_pii_redaction_text",
                       new_callable=AsyncMock) as mock_pii, \
-                patch("app.routers.matching_doc_router.llm.llmClassifyRequest", new_callable=AsyncMock) as mock_llm:
+                patch("app.routers.matching_doc_router.llm.llm_classify_request", new_callable=AsyncMock) as mock_llm:
             mock_pii.return_value = ["Blockchain developers needed"]
             mock_llm.return_value = mock_topics
             mock_svc.get_matching_docs.return_value = [blockchain_record.model_dump()]

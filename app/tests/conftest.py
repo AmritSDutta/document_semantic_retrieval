@@ -13,7 +13,12 @@ def blockchain_record():
         name="James Bentley",
         education="Computer Science degree",
         category="Blockchain",
-        skills="Blockchain, SQL, Git, Linux",
+        skills=[
+            "Blockchain",
+            "SQL",
+            "Git",
+            "Linux"
+        ],
         summary="blockchain developer with good experience",
     )
 
@@ -23,7 +28,10 @@ def mock_topics() -> ClassificationResult:
     """Returns a list of mock Topic instances."""
     return ClassificationResult(result=[
         Topic(name="Blockchain Development", confidence=0.95),
-        Topic(name="System Design", confidence=0.82)
+        Topic(name="Cryptocurrency", confidence=0.85),
+        Topic(name="Distributed Ledger Technology (DLT)", confidence=0.82),
+        Topic(name="Smart Contracts", confidence=0.75),
+        Topic(name="Decentralization", confidence=0.72)
     ])
 
 

@@ -28,9 +28,9 @@ class ClassifyLLMService:
         self.backoff = backoff
         self._schema = ClassificationResult.model_json_schema()
 
-    async def llmClassifyRequest(self, passage: str) -> ClassificationResult:
+    async def llm_classify_request(self, passage: str) -> ClassificationResult:
         prompt = self._build_base_prompt(passage)
-        llm = await get_chat_llm(is_summarizer=True)  # Uses weighted provider selection
+        llm = await get_chat_llm()
         response = await call_llm_safely(llm, [], HumanMessage(content=prompt))
         summary = response.content if hasattr(response, 'content') else str(response)
 

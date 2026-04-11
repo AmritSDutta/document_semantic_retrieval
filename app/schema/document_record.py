@@ -22,7 +22,7 @@ class DocumentRecord(BaseModel):
     name: str
     education: str
     category: str
-    skills: str
+    skills: list[str]
     summary: str
 
 

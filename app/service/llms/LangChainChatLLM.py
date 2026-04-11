@@ -29,12 +29,12 @@ def _get_random_llm_provider():
     return choice
 
 
-async def get_chat_llm(provider: str | None = None, is_summarizer: bool = False) -> BaseChatModel | Runnable:
+async def get_chat_llm(provider: str | None = None) -> BaseChatModel | Runnable:
     """
     A trivial LLM routing technique, random distribution with prefixed distribution.
     """
     llm, provider = await get_classifier_models(provider)
-    logging.info(f"Using {provider}, {llm.model_config} , is summarization model? {is_summarizer}")
+    logging.info(f"Using {provider}, {llm.model_config}")
 
     return llm
 

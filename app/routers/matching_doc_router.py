@@ -50,7 +50,7 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) ->
     await do_moderation_checking(passage)
     passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
     logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
-    docs = await llm.llmClassifyRequest(passage_redacted[0])
+    docs = await llm.llm_classify_request(passage_redacted[0])
     return ClassificationResult(result=docs.sorted_result)
 
 
@@ -65,7 +65,7 @@ async def classify_and_search(
     await do_moderation_checking(passage)
     passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
     logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
-    classification_result: ClassificationResult = await llm.llmClassifyRequest(passage_redacted[0])
+    classification_result: ClassificationResult = await llm.llm_classify_request(passage_redacted[0])
     derived_topic: str = classification_result.derive_relevant_topic.strip()
     docs: List[DocumentRecord] = await svc.get_matching_docs(derived_topic, limit)
     return docs
