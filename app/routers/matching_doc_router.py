@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import List, Dict
 
@@ -33,9 +34,8 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
     """
     logger.info(f'Received req: query -> {req.search_term.strip()}, limit -> {req.limit}')
 
-    passage: str = sanitize_passage(req.search_term.strip())
-    await do_moderation_checking(passage)
-    passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
+    passage_redacted: List[str] = await _do_sanitization_moderation_redaction(req.search_term.strip())
+
     logger.info(f'Redacted req: query -> {passage_redacted[0]}, limit -> {req.limit}')
     docs: List[DocumentRecord] = await svc.get_matching_docs(passage_redacted[0], req.limit)
     return docs
@@ -46,9 +46,8 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
 async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) -> ClassificationResult:
     logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
 
-    passage: str = sanitize_passage(passage)
-    await do_moderation_checking(passage)
-    passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
+    passage_redacted: List[str] = await _do_sanitization_moderation_redaction(passage)
+
     logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
     docs = await llm.llm_classify_request(passage_redacted[0])
     return ClassificationResult(result=docs.sorted_result)
@@ -61,9 +60,8 @@ async def classify_and_search(
         svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
     logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
 
-    passage: str = sanitize_passage(passage)
-    await do_moderation_checking(passage)
-    passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
+    passage_redacted: List[str] = await _do_sanitization_moderation_redaction(passage)
+
     logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
     classification_result: ClassificationResult = await llm.llm_classify_request(passage_redacted[0])
     derived_topic: str = classification_result.derive_relevant_topic.strip()
@@ -91,11 +89,21 @@ async def classify_and_search_classic_ml(
     from app.service.classic_ml.berttopic_modeling import infer_topic_model
     logger.info(f'received req: passage to be classified through classic ml-> {passage[:100]} ....')
 
-    passage: str = sanitize_passage(passage)
-    await do_moderation_checking(passage)
-    passage_redacted: List[str] = await pii_redactor.do_pii_redaction_text([passage])
+    passage_redacted: List[str] = await _do_sanitization_moderation_redaction(passage)
     logger.info(f'Redacted passage to be classified through classic ml-> {passage_redacted[0][:100]} ....')
     result: List[Dict[str, str]] = infer_topic_model(passage_redacted[0])
     derived_topic = ','.join(set(r['topic_name'] for r in result))
     docs: List[DocumentRecord] = await svc.get_matching_docs(derived_topic, limit)
     return docs
+
+
+async def _do_sanitization_moderation_redaction(passage: str) -> List[str]:
+    # 1. Sanitize first (dependency for next steps)
+    passage = await sanitize_passage(passage)
+
+    # 2. Run moderation and redaction concurrently
+    _, passage_redacted = await asyncio.gather(
+        do_moderation_checking(passage),
+        pii_redactor.do_pii_redaction_text([passage])
+    )
+    return passage_redacted

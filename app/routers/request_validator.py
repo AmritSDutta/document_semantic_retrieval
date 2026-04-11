@@ -36,7 +36,7 @@ MALICIOUS_PATTERNS = [
 ]
 
 
-def sanitize_passage(user_input: str, max_len=5000) -> str:
+async def sanitize_passage(user_input: str, max_len=5000) -> str:
     settings = Settings()
     if not settings.SANITIZATION_REQUIRED:
         return user_input
