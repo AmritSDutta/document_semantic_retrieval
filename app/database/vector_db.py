@@ -86,9 +86,13 @@ class VectorDb:
         return "[" + ",".join(map(str, arr)) + "]"
 
 
-db = VectorDb(DB_DSN)
+_db: VectorDb | None = None
 
 
 async def get_db() -> VectorDb:
-    logger.info('get_db()')
-    return db
+    global _db
+    if _db is None:
+        settings = get_settings()
+        _db = VectorDb(settings.DB_DSN)
+        await _db.init()
+    return _db
