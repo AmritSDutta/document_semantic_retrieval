@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict
 
-from fastapi import APIRouter, Depends, Body, Security
+from fastapi import APIRouter, Depends, Body, Security, BackgroundTasks
 from fastapi_limiter.depends import RateLimiter
 from pyrate_limiter import Limiter, Rate, Duration
 
@@ -70,15 +70,16 @@ async def classify_and_search(passage: str = Body(..., embed=True, max_length=50
     return docs
 
 
-@doc_router.post("/train_classic_ml", status_code=200, response_model=Dict[int, str],
+@doc_router.post("/train_classic_ml", status_code=200, response_model=str,
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.MINUTE * 15))))])
-async def search_docs() -> Dict[int, str]:
+async def train_classic_ml_model(background_tasks: BackgroundTasks) -> str:
     """
     Retrieve items by category with an optional limit.
     """
     from app.service.classic_ml.berttopic_modeling import train_topic_model
     logger.info(f'training started')
-    return train_topic_model()
+    background_tasks.add_task(train_topic_model)
+    return 'classic ml training task submitted'
 
 
 @doc_router.post("/search_through_classic_ml", status_code=200, response_model=List[DocumentRecord],
