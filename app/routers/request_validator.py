@@ -16,7 +16,7 @@ from app.schema.exceptions import ProviderUnavailableError
 logger = logging.getLogger(__name__)
 
 mistral_client = Mistral(api_key=os.getenv('MISTRAL_API_KEY'))
-openai_client= OpenAI()
+openai_client = OpenAI()
 
 moderation_circuit_breaker = CircuitBreaker(
     fail_max=4,
@@ -107,7 +107,6 @@ async def do_moderation_checking_mistral(user_input: str) -> None:
         return
 
     logging.info('starting moderation checking')
-
 
     try:
         response: ModerationResponse = mistral_client.classifiers.moderate(

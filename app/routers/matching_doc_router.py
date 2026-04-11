@@ -56,8 +56,9 @@ async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) ->
 
 @doc_router.post("/search_requirement", status_code=200, response_model=List[DocumentRecord],
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
-async def classify_and_search(passage: str = Body(..., embed=True, max_length=5000),
-                       svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
+async def classify_and_search(
+        passage: str = Body(..., embed=True, max_length=5000),
+        svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
     logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
 
     passage: str = sanitize_passage(passage)
@@ -84,8 +85,9 @@ async def train_classic_ml_model(background_tasks: BackgroundTasks) -> str:
 
 @doc_router.post("/search_through_classic_ml", status_code=200, response_model=List[DocumentRecord],
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
-async def classify_and_search_classic_ml(passage: str = Body(..., embed=True, max_length=5000),
-                       svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
+async def classify_and_search_classic_ml(
+        passage: str = Body(..., embed=True, max_length=5000),
+        svc: DocumentService = Depends(get_document_service), limit: int = 3) -> List[DocumentRecord]:
     from app.service.classic_ml.berttopic_modeling import infer_topic_model
     logger.info(f'received req: passage to be classified through classic ml-> {passage[:100]} ....')
 
