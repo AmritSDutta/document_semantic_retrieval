@@ -46,7 +46,7 @@ async def get_classifier_models(provider: str | None) -> tuple[BaseChatModel | N
     logging.info(f"Using {provider}")
     llm: BaseChatModel | None = None
     if provider.lower() == settings.OPENAI_PROVIDER_IDENTIFIER:
-        llm = ChatOpenAI(model=settings.OPENAI_VISION_MODEL, temperature=0)
+        llm = ChatOpenAI(model=settings.OPENAI_LLM_MODEL, temperature=0)
     elif provider.lower() == settings.GEMINI_PROVIDER_IDENTIFIER:
         llm = ChatGoogleGenerativeAI(model=settings.GEMINI_LLM_MODEL, temperature=0)
     elif provider.lower() == settings.ZHIPU_PROVIDER_IDENTIFIER:
