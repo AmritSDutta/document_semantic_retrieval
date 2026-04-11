@@ -8,6 +8,7 @@ from app.config.Settings import get_settings
 
 logger = logging.getLogger(__name__)
 
+
 def get_gemini_embedding(input_sentence: str, specific_task_type: str = 'semantic_similarity', dim: int = 256):
     """Return a flattened embedding vector (for pgvector, etc.) using Gemini."""
     max_retries = 3
