@@ -81,7 +81,7 @@ class MilvusStore(VectorStore):
     async def hybrid_search(self, query_embedding: Sequence[float],
                             n_results: int = 3, query: str = '') -> list[DocumentRecord]:
         try:
-            logging.info(f"Hybrid search with: {query}")
+            logging.info(f"Hybrid search with: {query[:15]} ....")
             # text semantic search (dense)
             search_param_1 = {
                 "data": [query_embedding],

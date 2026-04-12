@@ -201,7 +201,7 @@ async def do_moderation_checking_mistral(user_input: str) -> None:
             model="mistral-moderation-2603",
             inputs=[user_input]
         )
-        logging.info(f"Moderation mistral check result: {response}")
+        # logging.info(f"Moderation mistral check result: {response}")
 
         # Check if any category is flagged
         for result in response.results:
@@ -249,7 +249,7 @@ async def do_moderation_checking_openai(user_input: str) -> None:
             model=settings.MODERATION_MODEL,
             input=user_input
         )
-        logging.info(f"Moderation openai check result: {response}")
+        # logging.info(f"Moderation openai check result: {response}")
 
         if any(result.flagged for result in response.results):
             logging.info('moderation check failed:{}'.format(response))
