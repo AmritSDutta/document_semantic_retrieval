@@ -29,11 +29,99 @@ async def _should_retry(exc: BaseException) -> bool:
     return not isinstance(exc, CircuitBreakerError)
 
 
-MALICIOUS_PATTERNS = [
-    r"(?i)\b(eval|exec|__import__|os\.system|subprocess|popen|open)\b",
-    r"(<script\b|javascript:|on\w+\=)",  # XSS
-    r"(\.\./|\.\.\\|/etc/|C:\\Windows\\System32)",  # path-traversal
-]
+# Patterns for potentially malicious content
+MALICIOUS_PATTERNS = {
+    # Shell command injection patterns
+    "shell_injection": [
+        r";\s*(rm|mv|cp|dd|chmod|chown|cat|ls)\s+",  # Command chaining with dangerous commands
+        r"\|\s*(rm|mv|cp|dd|chmod|chown|cat|ls|grep)\s+",  # Pipe to dangerous commands
+        r"`.*\$.*`",  # Backtick command substitution with variables
+        r"\$\(.*\)",  # Command substitution
+        r'&&\s*(rm|mv|dd|chmod|cat|sudo)',  # AND operator with dangerous commands
+        r'\|\|\s*(rm|mv|dd|cat|sudo)',  # OR operator with dangerous commands
+        r'&&\s*sudo\s+',  # AND operator with sudo
+        r'\|\|\s*sudo\s+',  # OR operator with sudo
+    ],
+    # Docker commands that could be abused
+    "docker_abuse": [
+        r"docker\s+(exec|run)\s+.*-v\s*/",  # Volume mounting with root
+        r"docker\s+exec.*sudo",  # Docker exec with sudo
+        r"docker\s+run.*--privileged",  # Privileged mode
+        r"docker\s+run.*--pid=host",  # Host PID namespace
+        r"docker\s+run.*--network=host",  # Host network
+        r"docker\s+exec.*chmod",  # Docker exec with chmod
+        r"docker\s+exec.*sh",  # Shell access in container
+        r"docker\s+exec.*bash",  # Bash access in container
+    ],
+    # SQL injection patterns
+    "sql_injection": [
+        r"(\bor\b\s*\d+\s*=\s*\d+)",  # SQL bypass with OR
+        r"(\band\b\s*\d+\s*=\s*\d+)",  # SQL bypass with AND
+        r"union\s+select",  # UNION SELECT injection
+        r"exec\s*\(",  # Command execution in SQL
+    ],
+    # Path traversal attempts
+    "path_traversal": [
+        r"\.\./",  # Parent directory traversal
+        r"\.\.\\",  # Windows parent directory
+        r"%2e%2e",  # URL encoded parent directory
+        r"~root",  # Root home directory access
+        r"/etc/passwd",  # Accessing password file
+        r"/etc/shadow",  # Accessing shadow file
+        r"C:\\Windows\\System32",  # Windows system directory
+    ],
+    # System commands and dangerous operations
+    "system_commands": [
+        r"\brm\s+-rf\s+/",  # Delete root filesystem
+        r"\bdd\s+if=/dev/zero",  # Disk wipe
+        r"\bmkfs\.",  # Format filesystem
+        r"\bshutdown\b",  # Shutdown command
+        r"\breboot\b",  # Reboot command
+        r"\bsystemctl\s+(stop|disable|restart)",  # System service control
+        r"\bservice\s+\w+\s+stop",  # Stop services
+        r"\bkill\s+-9\s+\d+",  # Kill processes
+        r"\bkillall\b",  # Kill all processes
+        r"\binit\s+\d",  # Change runlevel
+        r"\bnc\s+.*-e",  # Netcat with execute
+        r"\bbash\s+-i",  # Interactive bash
+        r"\bcurl\s+.*\|\s*bash",  # Curl pipe to bash
+        r"\bwget\s+.*\|\s*sh",  # Wget pipe to shell
+        r"\bchmod\s+777",  # Dangerous permission change
+        r"\bchmod\s+-R",  # Recursive permission change
+        r"\bsudo\s+(su|bash|sh)",  # Privilege escalation
+    ],
+    # Script/Code execution patterns
+    "code_execution": [
+        r"<script[^>]*>",  # Script tags
+        r"javascript:",  # JavaScript protocol
+        r"onload\s*=",  # Event handler injection
+        r"onerror\s*=",  # Error handler injection
+        r"exec\s*\(",  # Exec function
+        r"__import__\(",  # Python import injection
+    ],
+    # Known malicious keywords
+    "malicious_keywords": [
+        "malware", "virus", "trojan", "ransomware", "spyware",
+        "keylogger", "backdoor", "rootkit", "botnet",
+        "shellcode", "bypass",
+    ],
+    "windows_abuse": [
+        r"\b(cmd|powershell|pwsh)\.exe\b",                 # Shell launch
+        r"\bpowershell\s+-enc\b",                          # Base64 encoded PS
+        r"\bpowershell\s+-nop\b",                          # NoProfile (stealth)
+        r"\bwmic\s+process\s+call\s+create\b",             # Spawn process
+        r"\breg\s+(add|delete|query)\b",                   # Registry tampering
+        r"\bschtasks\s+/create\b",                         # Scheduled task persistence
+        r"\bsc\s+(create|config|start|stop)\b",            # Service control
+        r"\bbcdedit\b",                                    # Boot config tampering
+        r"\bvssadmin\s+delete\s+shadows\b",                # Ransomware behavior
+        r"\bcipher\s+/w\b",                                # Disk wipe
+        r"\bnet\s+(user|localgroup)\b",                    # User/group manipulation
+        r"\brundll32\b",                                   # LOLBIN execution
+        r"\bmshta\b",                                      # Script execution LOLBIN
+        r"\bcertutil\s+-decode\b",                         # Payload decode
+    ]
+}
 
 
 async def sanitize_passage(user_input: str, max_len=5000) -> str:
