@@ -3,20 +3,18 @@ import logging
 import os
 import re
 from datetime import timedelta
-
 from aiobreaker import CircuitBreaker, CircuitBreakerError
 from fastapi import HTTPException
 from mistralai.client import Mistral
-from openai import OpenAI
+from openai import AsyncOpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
-
 from app.config.Settings import get_settings
 from app.schema.exceptions import ProviderUnavailableError
 
 logger = logging.getLogger(__name__)
 
 mistral_client = Mistral(api_key=os.getenv('MISTRAL_API_KEY'))
-openai_client = OpenAI()
+openai_client = AsyncOpenAI()
 
 moderation_circuit_breaker = CircuitBreaker(
     fail_max=4,
@@ -197,12 +195,10 @@ async def do_moderation_checking_mistral(user_input: str) -> None:
     logging.info('starting moderation checking')
 
     try:
-        response: ModerationResponse = mistral_client.classifiers.moderate(
+        response: ModerationResponse = await mistral_client.classifiers.moderate_async(
             model="mistral-moderation-2603",
             inputs=[user_input]
         )
-        # logging.info(f"Moderation mistral check result: {response}")
-
         # Check if any category is flagged
         for result in response.results:
             categories_to_check = \
@@ -241,19 +237,16 @@ async def do_moderation_checking_openai(user_input: str) -> None:
     settings = get_settings()
     if not settings.MODERATION_API_CHECK_REQ:
         return
-
-    logging.info('starting moderation checking')
-
     try:
-        response = openai_client.moderations.create(
+        response = await openai_client.moderations.create(
             model=settings.MODERATION_MODEL,
             input=user_input
         )
-        # logging.info(f"Moderation openai check result: {response}")
-
         if any(result.flagged for result in response.results):
             logging.info('moderation check failed:{}'.format(response))
             raise HTTPException(status_code=403, detail="Malicious content detected")
+
+        logging.info('moderation check completed')
 
     except RateLimitError as e:
         # Fail closed (block the request)

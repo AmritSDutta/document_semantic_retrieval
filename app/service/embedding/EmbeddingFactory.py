@@ -15,9 +15,7 @@ _GenAIEmbeddingService: GenAIEmbeddingService | None = None
 async def get_query_embedding_async(text: str) -> List[float]:
     # wrap sync embedding call in a thread to avoid blocking event loop
     embedding_service = get_embedding_service()
-    emb = await asyncio.to_thread(embedding_service.embed, text,
-                                  'retrieval_query',
-                                  get_settings().EMBEDDING_DIM)
+    emb = await embedding_service.embed(text, 'retrieval_query', get_settings().EMBEDDING_DIM)
     return list(emb)
 
 

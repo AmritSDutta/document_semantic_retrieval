@@ -14,8 +14,6 @@ from app.service.embedding.EmbeddingFactory import get_query_embedding_async
 from app.service.llm_classifier import ClassifyLLMService
 from app.service.utils.auth import get_api_key
 from app.service.utils.pii_redaction import PII_Redactor
-import time
-from app.service.utils.time_helper import time_coro
 logger = logging.getLogger(__name__)
 doc_router = APIRouter(prefix="/docs", tags=["docs"], dependencies=[Security(get_api_key)])
 llm = ClassifyLLMService()
@@ -33,11 +31,11 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
     """
     Retrieve items by category with an optional limit.
     """
-    logger.info(f'--------        Received req: query -> {req.search_term.strip()}, limit -> {req.limit}')
+    logger.info(f'### Received query -> {req.search_term.strip()[:25]} ..., limit -> {req.limit}')
 
     passage_redacted, query_emb = await _do_sanitization_moderation_redaction_embedding(req.search_term.strip())
 
-    logger.info(f'Redacted req: query -> {passage_redacted[0]}, limit -> {req.limit}')
+    logger.info(f'Redacted req: query -> {passage_redacted[0][:25]} . . .')
     docs: List[DocumentRecord] = await svc.get_matching_docs_by_embedding(passage_redacted[0], query_emb, req.limit)
     return docs
 
@@ -124,7 +122,7 @@ async def _do_sanitization_moderation_redaction_embedding(passage: str):
     # Run all three logical tracks concurrently
     # The total time is now max(Moderation, PII + Embedding)
     results = await asyncio.gather(
-        do_moderation_checking_mistral(passage),
+        do_moderation_checking(passage),
         _process_chain(passage)
     )
 
