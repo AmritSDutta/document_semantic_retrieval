@@ -7,7 +7,6 @@ from fastapi_limiter.depends import RateLimiter
 from pyrate_limiter import Limiter, Rate, Duration
 
 from app.database.document_repository import DocumentRepository
-from app.database.vector_db import VectorDb, get_db
 from app.routers.request_validator import sanitize_passage, do_moderation_checking
 from app.schema.document_record import DocumentRecord, SearchRequest, ClassificationResult
 from app.service.document_service import DocumentService
@@ -21,9 +20,9 @@ llm = ClassifyLLMService()
 pii_redactor = PII_Redactor()
 
 
-def get_document_service(db: VectorDb = Depends(get_db)) -> DocumentService:
+def get_document_service() -> DocumentService:
     logger.info('inside get_document_service')
-    return DocumentService(DocumentRepository(db))
+    return DocumentService(DocumentRepository())
 
 
 @doc_router.post("/search", status_code=200, response_model=List[DocumentRecord],
@@ -64,7 +63,7 @@ async def classify_and_search(
 
     logger.info(f'Redacted passage to be classified -> {passage_redacted[0][:100]} ....')
     classification_result: ClassificationResult = await llm.llm_classify_request(passage_redacted[0])
-    derived_topic: str = classification_result.derive_relevant_topic.strip()
+    derived_topic: str = classification_result.derive_relevant_topic().strip()
     docs: List[DocumentRecord] = await svc.get_matching_docs(derived_topic, limit)
     return docs
 

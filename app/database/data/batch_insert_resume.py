@@ -45,7 +45,7 @@ def _process_in_batches(cur, data):
         # Insert into Postgres
         execute_values(
             cur,
-            f"INSERT INTO {get_settings().TABLE_NAME} (resume_id, name, category,education, skills, summary, embedding) VALUES %s",
+            f"INSERT INTO {get_settings().COLLECTION_NAME} (resume_id, name, category,education, skills, summary, embedding) VALUES %s",
             data_list,
         )
         logging.info(f"Inserted {len(data_list)} rows into DB")
@@ -80,7 +80,7 @@ def _do_batch_insert():
 
         # Create target table
         table_create_sql = f"""
-        CREATE TABLE IF NOT EXISTS {get_settings().TABLE_NAME} (
+        CREATE TABLE IF NOT EXISTS {get_settings().COLLECTION_NAME} (
             id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
             resume_id TEXT NOT NULL,
             name TEXT,
@@ -95,7 +95,7 @@ def _do_batch_insert():
         cur.execute(table_create_sql)
         _process_in_batches(cur, data)
         index_creation_sql = f"""
-                CREATE INDEX IF NOT EXISTS {get_settings().TABLE_NAME}_embedding_hnsw_idx ON {get_settings().TABLE_NAME} USING hnsw (embedding vector_cosine_ops);
+                CREATE INDEX IF NOT EXISTS {get_settings().COLLECTION_NAME}_embedding_hnsw_idx ON {get_settings().COLLECTION_NAME} USING hnsw (embedding vector_cosine_ops);
         """
         logging.info(f'Creating index: {index_creation_sql}')
         cur.execute(index_creation_sql)
@@ -132,8 +132,8 @@ def table_exists(table_name: str) -> bool:
 
 async def batch_insert_async():
     """Skip if table exists, else perform insert asynchronously."""
-    exists = await asyncio.to_thread(table_exists, get_settings().TABLE_NAME)
+    exists = await asyncio.to_thread(table_exists, get_settings().COLLECTION_NAME)
     if exists:
-        logging.info(f"Table '{get_settings().TABLE_NAME}' already exists — skipping insert.")
+        logging.info(f"Table '{get_settings().COLLECTION_NAME}' already exists — skipping insert.")
         return None
     return await asyncio.to_thread(_do_batch_insert)

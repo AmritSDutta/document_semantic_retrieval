@@ -4,7 +4,7 @@ from typing import Sequence
 
 from mistralai.client import Mistral
 
-from app.config.Settings import Settings
+from app.config.Settings import get_settings
 from app.service.embedding.base import EmbeddingService
 
 logger = logging.getLogger(__name__)
@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 class MistralAIEmbeddingService(EmbeddingService):
     def __init__(self, api_key: str = None):
-        settings = Settings()
+        settings = get_settings()
         self.client = Mistral(api_key=api_key) if api_key else Mistral(os.getenv('MISTRAL_API_KEY'))
         self.model: str = settings.EMBEDDING_MODEL
-        self.dimension: int = settings.EMBED_DIM
+        self.dimension: int = settings.EMBEDDING_DIM
         self.type: str = "semantic_similarity"
 
     def embed(self, texts: str, task_type: str = None,
@@ -25,7 +25,6 @@ class MistralAIEmbeddingService(EmbeddingService):
             model=self.model,
             inputs=[texts],
         )
-        print(len(resp.data[0].embedding))
         return resp.data[0].embedding
 
     def embed_batch(

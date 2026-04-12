@@ -6,16 +6,15 @@ from langchain_core.messages import BaseMessage
 from presidio_analyzer import AnalyzerEngine, RecognizerResult
 from presidio_anonymizer import AnonymizerEngine
 
-from app.config.Settings import Settings
+from app.config.Settings import Settings, get_settings
 
 
 class PII_Redactor:
     """
     Helps in doing redaction of given langchain based messages
     """
-    settings = Settings()
 
-    def __init__(self, confidence_threshold: float = settings.PII_CONFIDENCE_THRESHOLD):
+    def __init__(self, confidence_threshold: float = get_settings().PII_CONFIDENCE_THRESHOLD):
         self.analyzer = AnalyzerEngine(supported_languages=["en"])
         self.anonymizer = AnonymizerEngine()
         self.confidence_threshold = confidence_threshold
@@ -25,7 +24,7 @@ class PII_Redactor:
         It first analyses whether to perform anonymization and then perform anonymization.
         It is only effects textual messages.
         """
-        settings = Settings()
+        settings = get_settings()
         if not settings.IS_PII_REDACTION_ENABLED:
             logging.info("PII redaction disabled")
             return messages
@@ -91,7 +90,7 @@ class PII_Redactor:
         It first analyses whether to perform anonymization and then perform anonymization.
         It is only effects textual messages.
         """
-        settings = Settings()
+        settings = get_settings()
         if not settings.IS_PII_REDACTION_ENABLED:
             logging.info("PII redaction disabled")
             return messages

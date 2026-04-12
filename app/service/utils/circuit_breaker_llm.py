@@ -9,7 +9,7 @@ from langchain_core.runnables import Runnable
 from tenacity import stop_after_attempt, wait_exponential, retry
 from tenacity.asyncio import retry_if_exception
 
-from app.config.Settings import Settings
+from app.config.Settings import get_settings
 from app.schema.exceptions import ProviderUnavailableError
 from app.service.llms.LangChainChatLLM import get_chat_llm
 
@@ -29,7 +29,7 @@ async def call_llm_safely(
     """
     A trivial safe llm calls , uses retry and circuit breaker.
     """
-    settings = Settings()
+    settings = get_settings()
     response = None
     full_context = conversation + [new_message]
     try:
@@ -39,7 +39,7 @@ async def call_llm_safely(
         return response
     except Exception as e:
         msg = str(e)
-        logging.error(f"Primary provider failed, trying alternative: {msg}")
+        logging.error(f"Primary provider failed, trying alternative: {msg}", exc_info=True)
         try:
             llm = await get_chat_llm(settings.FALLBACK_PROVIDER_IDENTIFIER)
             response = await llm.ainvoke(full_context)
@@ -48,7 +48,7 @@ async def call_llm_safely(
             return response
         except Exception as ae:
             msg_ae = str(ae)
-            logging.error(f"Fallback alternative failed too: {msg_ae}")
+            logging.error(f"Fallback alternative failed too: {msg_ae}", exc_info=True)
             
             # Map common upstream error strings to our custom exception
             if any(x in msg_ae for x in ("UNAVAILABLE", "503", "429", "RESOURCE_EXHAUSTED")):

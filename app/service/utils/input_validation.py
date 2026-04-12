@@ -4,7 +4,7 @@ import re
 from langchain_core.messages import BaseMessage, HumanMessage
 from openai.types import ModerationCreateResponse
 
-from app.config.Settings import Settings
+from app.config.Settings import Settings, get_settings
 
 # Patterns for potentially malicious content
 MALICIOUS_PATTERNS = {
@@ -115,7 +115,7 @@ async def scan_for_vulnerability(user_input: HumanMessage | str) -> bool:
     Scan user message for potentially malicious content.
     """
     logging.info("Scanning for vulnerabilities...")
-    settings = Settings()
+    settings = get_settings()
     user_message = []
     if not user_input:
         logging.warning('empty context passed for scanning')
@@ -163,7 +163,7 @@ async def get_moderation_api_feedback_on_input(user_input: BaseMessage | str) ->
     Check input using OpenAI's moderation API for harmful content.
     (omni-moderation-latest) -> text + image
     """
-    settings = Settings()
+    settings = get_settings()
     from openai import AsyncOpenAI
     if not user_input:
         logging.warning('empty context passed for moderation')

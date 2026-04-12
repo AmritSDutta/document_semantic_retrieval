@@ -11,11 +11,10 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.config.Settings import get_settings
 from app.config.logging_config import setup_logging
-from app.database.data.batch_insert_resume import batch_insert_async
-from app.database.vector_db import db
 from app.routers import app_router
 from app.schema.exceptions import ProviderUnavailableError
 from pyrate_limiter import Duration, Limiter, Rate
+
 # Initialize global logging before other imports
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -23,20 +22,14 @@ app_name = get_settings().APP_NAME
 port = get_settings().PORT
 
 
-def _verify_tests_pass():
-    subprocess.run(["pytest", "-q"], check=True)
-
-
 @asynccontextmanager
 async def lifespan(app_ins: FastAPI):
     logging.info(f'start: {app_ins.__str__()}')
-    #_verify_tests_pass()
-    await db.init()
-    await batch_insert_async()
     try:
         yield
     finally:
-        await db.close()
+        from app.service.vector_store.VectorStoreFactory import close_all_vector_stores
+        await close_all_vector_stores()
         logging.info('finish')
 
 
@@ -53,6 +46,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    import time
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    process_time = time.perf_counter() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
 
 
 @app.exception_handler(ProviderUnavailableError)
@@ -75,5 +78,5 @@ async def health():
     return {"health": "Server in fine health"}
 
 
-if __name__ == " __main__":
+if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)

@@ -10,7 +10,7 @@ from mistralai.client import Mistral
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
-from app.config.Settings import Settings
+from app.config.Settings import get_settings
 from app.schema.exceptions import ProviderUnavailableError
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ MALICIOUS_PATTERNS = [
 
 
 async def sanitize_passage(user_input: str, max_len=5000) -> str:
-    settings = Settings()
+    settings = get_settings()
     if not settings.SANITIZATION_REQUIRED:
         return user_input
     if not isinstance(user_input, str):
@@ -66,7 +66,7 @@ async def do_moderation_checking(user_input: str) -> None:
     """
     last frontier , check with LLM moderation model
     """
-    settings = Settings()
+    settings = get_settings()
     if not settings.MODERATION_API_CHECK_REQ:
         return
 
@@ -102,7 +102,7 @@ async def do_moderation_checking_mistral(user_input: str) -> None:
     """
     from mistralai.client.models import ModerationResponse
 
-    settings = Settings()
+    settings = get_settings()
     if not settings.MODERATION_API_CHECK_REQ:
         return
 
@@ -150,7 +150,7 @@ async def do_moderation_checking_openai(user_input: str) -> None:
     last frontier , check with LLM moderation model
     """
     from openai import RateLimitError, APIError, APIConnectionError
-    settings = Settings()
+    settings = get_settings()
     if not settings.MODERATION_API_CHECK_REQ:
         return
 

@@ -20,6 +20,8 @@ def blockchain_record():
             "Linux"
         ],
         summary="blockchain developer with good experience",
+        phone="+1 555-0101",
+        location="Montgomery, Alabama"
     )
 
 

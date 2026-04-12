@@ -7,7 +7,7 @@ class SearchRequest(BaseModel):
     search_term: constr(max_length=1000) = Field(
         ...,
         json_schema_extra={"example": "foo"},
-        description="Search term (max 100 characters)"
+        description="Search term (max 1000 characters)"
     )
     limit: conint(le=5) = Field(
         3,
@@ -24,6 +24,8 @@ class DocumentRecord(BaseModel):
     category: str
     skills: list[str]
     summary: str
+    phone: str
+    location: str
 
 
 class Topic(BaseModel):
@@ -38,7 +40,6 @@ class ClassificationResult(BaseModel):
     def sorted_result(self) -> List[Topic]:
         return sorted(self.result, key=lambda t: t.confidence, reverse=True)
 
-    @property
     def derive_relevant_topic(self, n: int = 5) -> str:
         sorted_topic = sorted(self.result, key=lambda t: t.confidence, reverse=True)
         op_n_topics = sorted_topic[:n]

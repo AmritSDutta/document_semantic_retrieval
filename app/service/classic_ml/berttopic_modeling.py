@@ -7,15 +7,14 @@ from sklearn.cluster import KMeans
 from umap import UMAP
 import json
 
-from app.config.Settings import Settings
+from app.config.Settings import Settings, get_settings
 from app.service.classic_ml.ml_helper import clean
 
-settings = Settings()
 logger = logging.getLogger(__name__)
 
 
 def _get_data() -> List[str]:
-    df = pd.read_json(settings.training_file_path, lines=True)
+    df = pd.read_json(get_settings().training_file_path, lines=True)
     df['clean'] = df['overall'].apply(clean)
     docs = df['clean'].astype(str).tolist()
     return docs

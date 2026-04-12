@@ -10,10 +10,8 @@ from langchain_mistralai import ChatMistralAI
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
-from app.config.Settings import Settings
+from app.config.Settings import get_settings
 
-random.seed(1234)
-settings = Settings()
 logger = logging.getLogger(__name__)
 
 
@@ -21,11 +19,11 @@ def _get_random_llm_provider():
     """
     Random distribution based selection.
     """
-    names = list(settings.LLM_PROVIDER_DISTRIBUTION.keys())
-    weights = list(settings.LLM_PROVIDER_DISTRIBUTION.values())
+    names = list(get_settings().LLM_PROVIDER_DISTRIBUTION.keys())
+    weights = list(get_settings().LLM_PROVIDER_DISTRIBUTION.values())
 
     choice = random.choices(names, weights=weights, k=1)[0]
-    logging.info(f"Using {settings.LLM_PROVIDER_DISTRIBUTION[choice]} -  weights")
+    logging.info(f"Using {get_settings().LLM_PROVIDER_DISTRIBUTION[choice]} -  weights")
     return choice
 
 
@@ -40,6 +38,7 @@ async def get_chat_llm(provider: str | None = None) -> BaseChatModel | Runnable:
 
 
 async def get_classifier_models(provider: str | None) -> tuple[BaseChatModel | None, Any]:
+    settings = get_settings()
     if provider is None:
         provider = _get_random_llm_provider()
 

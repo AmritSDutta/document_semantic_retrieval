@@ -14,13 +14,22 @@ logger = logging.getLogger(__name__)
 class Settings(BaseSettings):
     APP_NAME: str = 'Document Search App1'
     PORT: int = 8000
-    TABLE_NAME: str = 'resume_details'
-    EMBED_DIM: int = 1024
+    COLLECTION_NAME: str = 'resume_details'
+    VECTOR_STORE: str = "postgres"
+    EMBEDDING_DIM: int = 1024
     DB_DSN: str = 'postgres://user:password@localhost/resume_vector_db'
     EMBEDDING_MODEL: str = 'models/gemini-embedding-001'
     DB_NAME: str = 'resume_vector_db'
     DB_USER: str = 'user'
     DB_PASSWORD: str = 'password'
+
+    MILVUS_URI: str = "localhost"
+    MILVUS_TOKEN: str = "TOKEN"
+
+    QDRANT_HOST: str = "localhost"
+    QDRANT_PORT: int = 6333
+    QDRANT_API_KEY: str = "key"
+
     CSV_FILE: str = 'data/wine_reviews.csv'
     TRAINING_FILE: str = 'data/resume_filtered.jsonl'
     BATCH_SIZE: int = 10
@@ -102,7 +111,7 @@ def get_settings() -> Settings:
         logging.info("Settings Loaded")
 
         # Lazy init only once
-        print(DOTENV_PATH)
+        # print(DOTENV_PATH)
 
         logging.info(f"CWD: {os.getcwd()}")
         # logging.info(f"model_dump: {_settings.model_dump()}")
