@@ -1,0 +1,21 @@
+Here are 10 semantic search test queries generated from the provided resume data, each focused on specific professional profiles and under 100 words:
+
+1. **Blockchain Supply Chain Expert**: "Search for a Blockchain Developer with specific experience in Hyperledger and Ethereum. Looking for candidates who have successfully built decentralized platforms for supply chain management in the international transportation sector. Must be proficient in writing smart contracts and optimizing logistics processes using SQL and Linux."
+
+2. **Agile Business Analyst with Logistics Focus**: "Find a Business Analyst with a Certified Scrum Master (CSM) background and 7+ years of experience. Candidate should have a proven track record in automating warehouse management systems and warehouse logistics. Expertise in requirement gathering, Jira, and mapping workflow processes for global commerce is essential."
+
+3. **Senior Data Scientist for Fraud Detection**: "Seeking a Senior Data Scientist with expertise in credit card fraud detection and stock sentiment analysis. The ideal candidate uses machine learning, NLP, and deep neural networks to find complex patterns. Must be proficient in Python, R, and deploying modeling algorithms to drive business impact."
+
+4. **Oracle Database Administrator (DBA)**: "Search for a Database Administrator with 7+ years of hands-on experience in Oracle 12c and 19c. Candidates must have expertise in Data Guard for disaster recovery, RMAN for backup/recovery, and database migrations. Experience with SQL Server and performance tuning via AWR reports is highly preferred."
+
+5. **DevOps Engineer with Infrastructure as Code**: "Looking for a DevOps Engineer specialized in AWS cloud infrastructure and containerization. Candidate should be an expert in Terraform, Ansible, and Kubernetes. Must have experience building automated CI/CD pipelines using Jenkins and monitoring tools like Datadog or Splunk for large-scale production environments."
+
+6. **Full Stack .NET Core & Azure Developer**: "Find a Senior DotNet Developer with expertise in .NET Core 6 and Azure services like Functions and Logic Apps. Candidate must have experience building single-page applications (SPA) using Blazor or Angular. Required skills include Entity Framework, REST API development, and SQL Server stored procedures."
+
+7. **Java Developer with Microservices and AWS**: "Seeking a Full Stack Java Developer with 6+ years of experience in Spring Boot and microservices architecture. Candidate should have handled AWS S3 data hosting and integrated Okta SSO for authentication. Proficiency in AngularJS, RESTful web services, and SQL is required for this role."
+
+8. **ETL and Business Intelligence Specialist**: "Search for an ETL Developer or BI Developer with extensive experience in data warehousing and SSIS/SSRS. Candidate should be skilled in creating Tableau dashboards and performing data cleansing using Alteryx. Must have a strong background in SQL Server and optimizing complex T-SQL queries for reporting."
+
+9. **Epidemiologist with Data Science Skills**: "Looking for an Epidemiologist or Data Scientist with specialized knowledge in medical reporting and patient data analysis. Candidate should be proficient in SPSS, R, and GIS. Experience in systematic reviews, meta-analysis, and using technology-based curriculum for instructional roles is a plus."
+
+10. **Digital Media and Marketing Director**: "Find a Digital Media Director with a background in social media strategy and content creation. Candidate should have experience managing marketing campaigns for radio stations or educational institutions. Skills must include SEO, SEM, Adobe Creative Suite, and managing high-volume digital content distribution."

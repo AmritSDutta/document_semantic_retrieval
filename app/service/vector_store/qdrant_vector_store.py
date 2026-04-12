@@ -30,13 +30,13 @@ class QdrantStore(VectorStore):
 
     @property
     def bm25_embedding_model(self):
-        if not hasattr(self, '_bm25_model'):
+        if self._bm25_model is None:
             self._bm25_model = SparseTextEmbedding("Qdrant/bm25", threads=2)
         return self._bm25_model
 
     @property
     def late_interaction_embedding_model(self):
-        if not hasattr(self, '_late_interaction_embedding_model'):
+        if self._late_interaction_embedding_model is None:
             self._late_interaction_embedding_model = LateInteractionTextEmbedding("colbert-ir/colbertv2.0", threads=4)
         return self._late_interaction_embedding_model
 
