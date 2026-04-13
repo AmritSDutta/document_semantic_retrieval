@@ -79,6 +79,10 @@ class Settings(BaseSettings):
     PII_CONFIDENCE_THRESHOLD: float = 0.5
     IS_PII_REDACTION_ENABLED: bool = True
 
+    ARIZE_SPACE_ID: str = 'arize-space-id'
+    ARIZE_API_KEY: str = 'arize-api-key'
+    ARIZE_ENABLE_TRACING: str = 'true'
+
     @property
     def csv_file_path(self) -> Path:
         """Return absolute, validated path to the CSV."""

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Body, Security, BackgroundTasks
 from fastapi_limiter.depends import RateLimiter
 from pyrate_limiter import Limiter, Rate, Duration
 
+from app.config.arize_confg import tracer
 from app.database.document_repository import DocumentRepository
 from app.routers.request_validator import sanitize_passage, do_moderation_checking, do_moderation_checking_mistral
 from app.schema.document_record import DocumentRecord, SearchRequest, ClassificationResult
@@ -29,6 +30,7 @@ def get_document_service() -> DocumentService:
 
 @doc_router.post("/search", status_code=200, response_model=List[DocumentRecord],
                  dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
+@tracer.chain
 async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_document_service)) -> List[DocumentRecord]:
     """
     Retrieve items by category with an optional limit.
