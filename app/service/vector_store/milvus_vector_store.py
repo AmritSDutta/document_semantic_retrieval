@@ -2,7 +2,7 @@ import logging
 from typing import Sequence, Dict
 
 from pandas import DataFrame
-from pymilvus import MilvusClient, Function, FunctionType, AnnSearchRequest
+from pymilvus import Function, FunctionType, AnnSearchRequest, AsyncMilvusClient
 
 from app.config.Settings import get_settings
 from app.schema.document_record import DocumentRecord
@@ -18,7 +18,7 @@ class MilvusStore(VectorStore):
         validate_collection_name(settings.COLLECTION_NAME)
         self.collection_name = settings.COLLECTION_NAME
 
-        self.client = MilvusClient(
+        self.client = AsyncMilvusClient(
             uri=settings.MILVUS_URI,
             token=settings.MILVUS_TOKEN,
             timeout=30,
@@ -36,7 +36,7 @@ class MilvusStore(VectorStore):
     async def query(self, query_embedding: Sequence[float], n_results: int = 3, query: str = '') -> Dict:
         try:
             # 1. Search in Milvus
-            search_res = self.client.search(
+            search_res = await self.client.search(
                 collection_name=self.collection_name,
                 data=[list(query_embedding)],
                 limit=n_results,
@@ -73,7 +73,7 @@ class MilvusStore(VectorStore):
 
     async def list_collection(self) -> list[str]:
         try:
-            return self.client.list_collections()
+            return await self.client.list_collections()
         except Exception as e:
             logging.error(f"Milvus list collections error: {e}", exc_info=True)
             raise
@@ -110,7 +110,7 @@ class MilvusStore(VectorStore):
                     "k": 100  # Optional
                 }
             )
-            res = self.client.hybrid_search(
+            res = await self.client.hybrid_search(
                 collection_name=self.collection_name,
                 reqs=reqs,
                 ranker=ranker,
@@ -139,4 +139,4 @@ class MilvusStore(VectorStore):
             raise
 
     async def close(self):
-        self.client.close()
+        await self.client.close()

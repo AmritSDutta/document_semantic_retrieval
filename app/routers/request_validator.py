@@ -192,8 +192,6 @@ async def do_moderation_checking_mistral(user_input: str) -> None:
     if not settings.MODERATION_API_CHECK_REQ:
         return
 
-    logging.info('starting moderation checking')
-
     try:
         response: ModerationResponse = await mistral_client.classifiers.moderate_async(
             model="mistral-moderation-2603",
@@ -213,6 +211,8 @@ async def do_moderation_checking_mistral(user_input: str) -> None:
                     status_code=403,
                     detail="Malicious content detected"
                 )
+
+            logging.info('[Mistral] completed moderation checking')
 
     except Exception as e:
         logging.error(f"Moderation service error: {e}")
@@ -246,7 +246,7 @@ async def do_moderation_checking_openai(user_input: str) -> None:
             logging.info('moderation check failed:{}'.format(response))
             raise HTTPException(status_code=403, detail="Malicious content detected")
 
-        logging.info('moderation check completed')
+        logging.info('[OpenAI] moderation check completed')
 
     except RateLimitError as e:
         # Fail closed (block the request)

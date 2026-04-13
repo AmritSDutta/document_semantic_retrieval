@@ -14,6 +14,8 @@ from app.service.embedding.EmbeddingFactory import get_query_embedding_async
 from app.service.llm_classifier import ClassifyLLMService
 from app.service.utils.auth import get_api_key
 from app.service.utils.pii_redaction import PII_Redactor
+from app.service.utils.time_helper import time_coro
+
 logger = logging.getLogger(__name__)
 doc_router = APIRouter(prefix="/docs", tags=["docs"], dependencies=[Security(get_api_key)])
 llm = ClassifyLLMService()
@@ -112,7 +114,7 @@ async def _do_sanitization_moderation_redaction(passage: str) -> List[str]:
 async def _process_chain(passage: str):
     # Chain PII and Embedding so they run while Moderation is fetching
     redacted = await pii_redactor.do_pii_redaction_text([passage])
-    emb = await get_query_embedding_async(redacted[0])
+    emb = await time_coro('embedding', get_query_embedding_async(redacted[0]))
     return redacted, emb
 
 
@@ -122,7 +124,7 @@ async def _do_sanitization_moderation_redaction_embedding(passage: str):
     # Run all three logical tracks concurrently
     # The total time is now max(Moderation, PII + Embedding)
     results = await asyncio.gather(
-        do_moderation_checking(passage),
+        time_coro('moderation', do_moderation_checking_mistral(passage)),
         _process_chain(passage)
     )
 

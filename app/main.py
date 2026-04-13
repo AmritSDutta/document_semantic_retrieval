@@ -1,5 +1,4 @@
 import logging
-import subprocess
 from contextlib import asynccontextmanager
 
 import uvicorn

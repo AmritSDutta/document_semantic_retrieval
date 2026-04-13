@@ -1,8 +1,8 @@
 import logging
 from typing import Sequence, Any
 
+import qdrant_client
 from fastembed import SparseTextEmbedding, LateInteractionTextEmbedding
-from qdrant_client import QdrantClient
 from qdrant_client.http.models import CollectionsResponse
 
 from app.config.Settings import get_settings
@@ -21,7 +21,7 @@ class QdrantStore(VectorStore):
         validate_collection_name(settings.COLLECTION_NAME)
         self.collection_name = settings.COLLECTION_NAME
 
-        self.qdrant_client = QdrantClient(
+        self.qdrant_client = qdrant_client.AsyncQdrantClient(
             url=settings.QDRANT_HOST,
             port=settings.QDRANT_PORT,
             api_key=settings.QDRANT_API_KEY,
@@ -44,7 +44,7 @@ class QdrantStore(VectorStore):
                     n_results: int = 3, query: str = '') -> dict[str, list[Any]]:
         try:
             # 1. dense ranking
-            hits = self.qdrant_client.query_points(
+            hits = await self.qdrant_client.query_points(
                 collection_name=self.collection_name,
                 query=list(query_embedding),
                 using="genai",
@@ -81,7 +81,7 @@ class QdrantStore(VectorStore):
     async def list_collection(self) -> list[str]:
         try:
             logging.info('listing collection')
-            response: CollectionsResponse = self.qdrant_client.get_collections()
+            response: CollectionsResponse = await self.qdrant_client.get_collections()
             logging.info(f'returned collections: {response.collections}')
             existing_collections_list = [collection.name for collection in response.collections]
             logging.info(f'found {len(existing_collections_list)} collections')
@@ -100,7 +100,7 @@ class QdrantStore(VectorStore):
             colbert_query = next(self.late_interaction_embedding_model.query_embed(query))
 
             # 2. Single-call Multi-stage Search: (Dense + Sparse) -> RRF -> ColBERT Rerank
-            response = self.qdrant_client.query_points(
+            response = await self.qdrant_client.query_points(
                 collection_name=self.collection_name,
                 prefetch=[
                     models.Prefetch(
@@ -141,4 +141,4 @@ class QdrantStore(VectorStore):
             raise
 
     async def close(self):
-        self.qdrant_client.close()
+        await self.qdrant_client.close()
