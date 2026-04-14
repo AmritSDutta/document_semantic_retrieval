@@ -24,15 +24,16 @@ def get_embedding_service():
     global _MistralAIEmbeddingService, _GenAIEmbeddingService
     # Check if primary embedder is genai and if its breaker is OPEN
     if settings.EMBEDDER == "genai":
-        logging.info(
-            f'embedding {settings.EMBEDDER} model to be used: {settings.EMBEDDING_MODEL}, DIMENSION: {settings.EMBEDDING_DIM}')
+
         if _GenAIEmbeddingService is None:
+            logging.info(
+                f'Provider: {settings.EMBEDDER}, Model: {settings.EMBEDDING_MODEL}, Dimension: {settings.EMBEDDING_DIM}')
             _GenAIEmbeddingService = GenAIEmbeddingService()
         return _GenAIEmbeddingService
     elif settings.EMBEDDER == "mistralai":
-        logging.info(
-            f'embedding {settings.EMBEDDER} model to be used: {settings.EMBEDDING_MODEL}, DIMENSION: {settings.EMBEDDING_DIM}')
         if _MistralAIEmbeddingService is None:
+            logging.info(
+                f'Provider {settings.EMBEDDER}, Model: {settings.EMBEDDING_MODEL}, Dimension: {settings.EMBEDDING_DIM}')
             _MistralAIEmbeddingService = MistralAIEmbeddingService()
         return _MistralAIEmbeddingService
 

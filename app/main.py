@@ -24,10 +24,14 @@ port = get_settings().PORT
 @asynccontextmanager
 async def lifespan(app_ins: FastAPI):
     logging.info(f'start: {app_ins.__str__()}')
+    from app.service.vector_store.VectorStoreFactory import close_all_vector_stores, check_collection_exists
+
     try:
+        is_collection_exist: bool = await check_collection_exists()
+        if not is_collection_exist:
+            raise Exception(f'Collection [{get_settings().COLLECTION_NAME}] does not exist')
         yield
     finally:
-        from app.service.vector_store.VectorStoreFactory import close_all_vector_stores
         await close_all_vector_stores()
         logging.info('finish')
 

@@ -72,7 +72,7 @@ def run_payload_pool():
             print(f"Request {i + 1} failed: {e}")
 
         if i < len(queries) - 1:
-            time.sleep(1)
+            time.sleep(2)
 
     if latencies:
         avg_time = sum(latencies) / len(latencies)

@@ -142,3 +142,10 @@ class QdrantStore(VectorStore):
 
     async def close(self):
         await self.qdrant_client.close()
+
+    async def check_collection_exists(self) -> bool:
+        try:
+            return await self.qdrant_client.collection_exists(self.collection_name)
+        except Exception as e:
+            logging.error(f"Error while checking  qdrant collection existence: {e}", exc_info=True)
+            raise

@@ -159,3 +159,21 @@ class PGVectorStore(VectorStore):
             except Exception as e:
                 logging.error(f"Postgres list error: {e}", exc_info=True)
                 raise
+
+    async def check_collection_exists(self) -> bool:
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            try:
+                # Use fetchval for a direct boolean and $1 for parameterization
+                return await conn.fetchval(
+                    """
+                    SELECT EXISTS (SELECT
+                                   FROM information_schema.tables
+                                   WHERE table_schema = 'public'
+                                     AND table_name = $1)
+                    """,
+                    self.collection_name
+                )
+            except Exception as e:
+                logging.error(f"Postgres check error: {e}", exc_info=True)
+                raise

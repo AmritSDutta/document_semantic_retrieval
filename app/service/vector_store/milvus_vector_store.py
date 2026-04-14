@@ -140,3 +140,10 @@ class MilvusStore(VectorStore):
 
     async def close(self):
         await self.client.close()
+
+    async def check_collection_exists(self) -> bool:
+        try:
+            return await self.client.has_collection(self.collection_name)
+        except Exception as e:
+            logging.error(f"Milvus check collections existence: {e}", exc_info=True)
+            raise

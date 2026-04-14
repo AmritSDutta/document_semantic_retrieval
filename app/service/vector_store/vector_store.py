@@ -33,3 +33,6 @@ class VectorStore:
     async def hybrid_search(self, query_embedding: Sequence[float],
                             n_results: int = 3, query: str = '') -> list[DocumentRecord]:
         raise NotImplementedError
+
+    async def check_collection_exists(self) -> bool:
+        raise NotImplementedError

@@ -75,3 +75,8 @@ async def close_all_vector_stores():
     _qdrantStore = None
     _milvusStore = None
     _pgStore = None
+
+
+async def check_collection_exists() -> bool:
+    vs = get_vector_store()
+    return await vs.check_collection_exists()
