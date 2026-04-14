@@ -13,8 +13,31 @@ def _get_messy_text():
         - এটা একটা সুন্দর বাংলা বাক্য।"""
 
 
+def _get_messy_code():
+    return """Need help with following code:
+           for i, query in enumerate(queries):
+        payload = {"search_term": query, "limit": 3}
+        try:
+            r = requests.post(url, json=payload, headers={"X-API-KEY": api_key})
+            r.raise_for_status()
+
+            # Extract process time from header
+            proc_time = r.headers.get("x-process-time")
+            if proc_time:
+                latencies.append(float(proc_time))
+
+            print(f"Req {i + 1} - Server Process Time: {proc_time}s")
+        except requests.exceptions.RequestException as e:
+            print(f"Request {i + 1} failed: {e}")
+
+        if i < len(queries) - 1:
+            time.sleep(1)
+        """
+
+
 queries = [
     _get_messy_text(),
+    _get_messy_code(),
     "Search for a Blockchain Developer with specific experience in Hyperledger and Ethereum. Looking for candidates who have successfully built decentralized platforms for supply chain management in the international transportation sector. Must be proficient in writing smart contracts and optimizing logistics processes using SQL and Linux.",
     "Find a Business Analyst with a Certified Scrum Master (CSM) background and 7+ years of experience. Candidate should have a proven track record in automating warehouse management systems and warehouse logistics. Expertise in requirement gathering, Jira, and mapping workflow processes for global commerce is essential.",
     "Seeking a Senior Data Scientist with expertise in credit card fraud detection and stock sentiment analysis. The ideal candidate uses machine learning, NLP, and deep neural networks to find complex patterns. Must be proficient in Python, R, and deploying modeling algorithms to drive business impact.",
@@ -33,7 +56,7 @@ def run_payload_pool():
     api_key = "1234"
     latencies = []
 
-    for i, query in enumerate(queries):
+    for i, query in enumerate(queries[:3]):
         payload = {"search_term": query, "limit": 3}
         try:
             r = requests.post(url, json=payload, headers={"X-API-KEY": api_key})
