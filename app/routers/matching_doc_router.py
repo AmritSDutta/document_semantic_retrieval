@@ -29,7 +29,7 @@ def get_document_service() -> DocumentService:
 
 
 @doc_router.post("/search", status_code=200, response_model=List[DocumentRecord],
-                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
+                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(5, Duration.SECOND * 1))))])
 @tracer.chain
 async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_document_service)) -> List[DocumentRecord]:
     """
@@ -45,7 +45,7 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
 
 
 @doc_router.post("/classify", status_code=200, response_model=ClassificationResult,
-                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 5))))])
+                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(1, Duration.SECOND * 1))))])
 async def classify_doc(passage: str = Body(..., embed=True, max_length=5000)) -> ClassificationResult:
     logger.info(f'received req: passage to be classified -> {passage[:100]} ....')
 
