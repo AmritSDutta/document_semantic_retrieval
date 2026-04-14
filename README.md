@@ -31,7 +31,34 @@ A high-performance semantic search system with **multi-vector-store architecture
 - **Asynchronous Processing**: High-performance I/O bound operations across the entire stack.
 
 ---
+## 🎯 Architecture Overview
 
+This system implements a **CQRS-style separation** between write and read operations:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   INGESTER APP                          │
+│  (Write Side - Separate Application Logic)               │
+│  • create()              - Create collections              │
+│  • save()                - Batch insert documents         │
+│  • delete_collection()   - Drop collections              │
+│  • Data migration, ETL, schema management              │
+└───────────────┬─────────────────────────────────────────┘
+                │
+                │ (Shared Vector Database)
+                │
+                ▼
+┌─────────────────────────────────────────────────────────┐
+│              SEARCH API (This App)                       │
+│  (Read Side - Query Optimized)                            │
+│  • query()               - Dense vector search            │
+│  • hybrid_search()       - Multi-stage hybrid search      │
+│  • list_collection()     - Metadata queries               │
+│  • Connection pooling, caching, read replicas           │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
 ## 🛠️ Tech Stack
 
 ### Core
