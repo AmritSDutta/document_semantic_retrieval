@@ -56,7 +56,7 @@ def run_payload_pool():
     api_key = "1234"
     latencies = []
 
-    for i, query in enumerate(queries[:3]):
+    for i, query in enumerate(queries):
         payload = {"search_term": query, "limit": 3}
         try:
             r = requests.post(url, json=payload, headers={"X-API-KEY": api_key})
