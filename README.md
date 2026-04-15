@@ -1,39 +1,39 @@
 # 📄 Document Semantic Retrieval & AI
 
-A high-performance semantic search system with **multi-vector-store architecture**, supporting **PostgreSQL**, **Qdrant**, and **Milvus**. Built with **FastAPI** and following **CQRS principles**, this system provides production-ready semantic search with hybrid retrieval and intelligent document modeling capabilities.
+A high-performance semantic search and classification system with a **multi-vector-store architecture**, supporting **PostgreSQL (pgvector)**, **Qdrant**, and **Milvus**. Built with **FastAPI** and following **CQRS principles**, this system provides production-ready semantic search with hybrid retrieval, intelligent document modeling, and enterprise-grade security.
 
 ---
 
 ## 🚀 Key Features
 
-### Advanced Search Capabilities
-- **Dense Vector Search**: Semantic similarity with LLM-based embedding models (Gemini, Mistral).
-- **Hybrid Search**: Combines vector similarity with keyword matching (BM25/full-text) using Reciprocal Rank Fusion (RRF).
-- **Classic ML Search**: Topic modeling with **BERTopic**, allowing document retrieval based on automatically discovered themes.
-- **Requirement-Based Search**: Classifies input requirements into topics via LLM before performing semantic retrieval.
-- **Cross-Encoder Reranking**: Utilizes `jina-reranker-v2-base-multilingual` for high-precision result refinement.
+### Advanced Search & Retrieval
+- **Hybrid Search (RRF)**: Combines dense vector similarity with keyword matching (BM25/full-text) using Reciprocal Rank Fusion for superior relevance.
+- **Multi-Stage Reranking**: Utilizes `jina-reranker-v2-base-multilingual` (Cross-Encoder) as a second-pass refinement for top-k candidates.
+- **Intelligent Semantic Caching**: Powered by `langcache` to provide sub-millisecond responses for repeated or semantically similar queries.
+- **Requirement-Based Search**: Orchestrated flow that classifies complex requirements into high-level topics via LLM before performing targeted semantic retrieval.
+- **Classic ML (BERTopic)**: Automated topic discovery and inference-based search, allowing for domain-specific thematic document modeling.
 
-### Multi-Vector-Store Support
-- **PostgreSQL + pgvector**: RRF hybrid search (vector + full-text).
-- **Qdrant**: Multi-stage prefetch (dense + sparse → RRF → ColBERT/Cross-Encoder).
-- **Milvus**: Native RRF hybrid search with BM25.
+### Multi-Vector-Store Architecture
+- **PostgreSQL + pgvector**: Optimized RRF hybrid search using native vector operations and GIN-indexed full-text search.
+- **Qdrant**: High-performance multi-stage prefetch architecture (Dense + Sparse → RRF → ColBERT/Cross-Encoder).
+- **Milvus**: Native RRF hybrid search with integrated BM25 support and collection-level optimization.
 
-### Enterprise-Grade Security
-- **Comprehensive Validation**: Protection against SQL injection, XSS, shell injection, Docker abuse, and path traversal.
-- **Multi-Provider Moderation**: Layered content checking via OpenAI and Mistral with circuit breakers and retries.
-- **PII Redaction**: Automatic detection and redaction of sensitive information using Microsoft Presidio.
-- **Rate Limiting**: Integrated per-IP rate limiting via `fastapi-limiter` and `pyrate-limiter`.
+### Enterprise-Grade Security & Resilience
+- **Multi-Layered Sanitization**: 100+ regex patterns protecting against SQLi, XSS, shell injection, Docker abuse, and path traversal.
+- **Layered Moderation Chain**: Concurrent checking via OpenAI and Mistral with **circuit breakers** (`aiobreaker`) and **exponential backoff** (`tenacity`).
+- **PII Redaction**: Automatic detection and redaction of sensitive information using Microsoft Presidio (Analyzer & Anonymizer).
+- **Rate Limiting**: Integrated per-IP and per-endpoint rate limiting via `fastapi-limiter`.
 
-### AI/ML & Resilience
-- **Multi-Provider LLM Integration**: Support for OpenAI, Gemini, Mistral, Ollama, Zhipu, and Sarvam.
-- **Flexible Embeddings**: Support for Gemini and MistralAI embeddings via a factory pattern.
-- **Circuit Breakers & Retries**: Robust handling of upstream provider failures using `aiobreaker` and `tenacity`.
-- **Asynchronous Processing**: High-performance I/O bound operations across the entire stack.
+### Multi-Provider LLM Intelligence
+- **Smart Routing**: Weighted random distribution across Gemini, OpenAI, Mistral, Ollama, Zhipu, and Sarvam.
+- **Self-Healing LLM Output**: Intelligent "Auto-Repair" logic that uses multi-attempt prompts to fix malformed JSON responses from LLMs.
+- **Asynchronous Execution**: Strict use of `async/await` and `asyncio.gather` for concurrent processing of sanitization, moderation, and embedding generation.
 
 ---
+
 ## 🎯 Architecture Overview
 
-This system implements a **CQRS-style separation** between write and read operations:
+The system implements a **CQRS-style separation** and a highly concurrent request lifecycle:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -59,25 +59,24 @@ This system implements a **CQRS-style separation** between write and read operat
 ```
 
 ---
+
 ## 🛠️ Tech Stack
 
-### Core
-- **Framework**: FastAPI, Uvicorn, Streamlit
+### Core Frameworks
+- **Backend**: FastAPI, Uvicorn, Streamlit (UI)
 - **Language**: Python 3.11+
-- **Validation**: Pydantic v2
+- **Validation**: Pydantic v2 (Strict typing and validation)
 
-### Vector Databases & AI
+### AI & Vector Infrastructure
 - **Databases**: PostgreSQL (pgvector), Qdrant, Milvus
-- **Embeddings**: Google GenAI, MistralAI
-- **Topic Modeling**: BERTopic, UMAP, scikit-learn
-- **Reranking**: Jina AI Cross-Encoder (FastEmbed)
-- **Sparse Models**: BM25 (via Qdrant/Milvus FastEmbed)
+- **Embeddings**: Google GenAI (Gemini), MistralAI, FastEmbed (ColBERT)
+- **Reranking**: Jina AI Cross-Encoder (v2-base-multilingual)
+- **Topic Modeling**: BERTopic (UMAP, HDBSCAN, KMeans)
 
-### Security & Infrastructure
-- **PII Protection**: Microsoft Presidio
-- **Moderation**: OpenAI & Mistral Content Moderation
+### Security & Observability
+- **Protection**: Microsoft Presidio, OpenAI/Mistral Moderation
 - **Resilience**: `aiobreaker`, `tenacity`, `fastapi-limiter`
-- **Observability**: Arize Phoenix/OpenInference (Tracing)
+- **Tracing**: Arize Phoenix / OpenInference (Full-chain tracing of retrieval and classification)
 
 ---
 
@@ -85,15 +84,18 @@ This system implements a **CQRS-style separation** between write and read operat
 
 ### 1. Prerequisites
 - Python 3.11+
-- Vector database (PostgreSQL+pgvector, Qdrant, or Milvus)
-- API Keys for AI providers (Gemini, MistralAI, OpenAI, etc.)
+- A running vector database (PostgreSQL+pgvector, Qdrant, or Milvus)
+- API Keys for AI providers (Gemini, Mistral, OpenAI)
 
 ### 2. Installation
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Running the Application
+### 3. Configuration
+Copy `.env.example` to `.env` and configure your database URI, API keys, and preferred provider weights.
+
+### 4. Running the Application
 **Start the FastAPI Backend:**
 ```bash
 python -m uvicorn app.main:app --reload
@@ -101,73 +103,35 @@ python -m uvicorn app.main:app --reload
 
 **Start the Streamlit UI:**
 ```bash
-# Windows (PowerShell)
+# Set PYTHONPATH to include the project root
 $env:PYTHONPATH = "."; streamlit run app/ui.py
-
-# Linux/macOS
-PYTHONPATH=. streamlit run app/ui.py
 ```
 
 ---
 
 ## 🔌 API Endpoints
 
-### Search & Classification
-
-#### Semantic Search
-```
-POST /api/docs/search
-```
-Comprehensive search using hybrid retrieval (Vector + BM25) and cross-encoder reranking.
-
-#### Document Classification
-```
-POST /api/docs/classify
-```
-Classifies input text into relevant categories using multi-provider LLM intelligence.
-
-#### Requirement-Based Search
-```
-POST /api/docs/search_requirement
-```
-Classifies a complex requirement into a topic first, then performs semantic retrieval.
-
-### Classic ML (BERTopic)
-
-#### Train Topic Model
-```
-POST /api/docs/train_classic_ml
-```
-Submits a background task to train a BERTopic model on the configured document collection.
-
-#### Search via Classic ML
-```
-POST /api/docs/search_through_classic_ml
-```
-Infers topics for input text using the trained BERTopic model and performs semantic search based on discovered labels.
+| Category | Endpoint | Description |
+| :--- | :--- | :--- |
+| **Search** | `POST /api/docs/search` | Hybrid search (Vector + BM25) with reranking. |
+| **Search** | `POST /api/docs/search_with_cache` | Semantic-cache enabled search. |
+| **Classification** | `POST /api/docs/classify` | LLM-based document classification with auto-repair. |
+| **Logic** | `POST /api/docs/search_requirement` | Topic derivation followed by semantic retrieval. |
+| **Classic ML** | `POST /api/docs/train_classic_ml` | Asynchronous BERTopic training task. |
+| **Classic ML** | `POST /api/docs/search_through_classic_ml` | Inference-based search using trained topic labels. |
 
 ---
 
-## 🔒 Security
+## 🏗️ Implementation Highlights
 
-All `/api/docs/*` endpoints require:
-1. **API Key Authentication**: `X-API-KEY` header set to your `API_INTERNAL_KEY`.
-2. **Moderation & Sanitization**: All inputs are sanitized and checked for malicious content concurrently.
-3. **PII Redaction**: Sensitive information is redacted before processing by third-party LLMs.
-
----
-
-## 🏗️ Architecture Highlights
-
-### Concurrent Request Chain
-The system optimizes search latency by running non-dependent validation steps concurrently:
-1. **Sanitize Input** (Sequential dependency)
-2. **Concurrent Branch 1**: Content Moderation (Mistral/OpenAI)
-3. **Concurrent Branch 2**: PII Redaction → Embedding Generation
-4. **Final Stage**: Vector Store Retrieval & Reranking
+### Concurrent Processing
+To minimize latency, the system processes moderation and PII-redacted embedding generation in parallel using `asyncio.gather`. The total latency is reduced to `max(Moderation_Time, PII_Redaction_Time + Embedding_Time)`.
 
 ### Vector Store Abstraction
-A unified interface (`VectorStore`) allows the application to switch between PostgreSQL, Qdrant, and Milvus seamlessly via environment configuration, with each implementation optimized for its native strengths (e.g., pgvector for Postgres, native BM25 for Milvus).
+A unified `VectorStore` interface allows seamless switching between databases. Each implementation is optimized:
+- **PostgreSQL**: Uses Reciprocal Rank Fusion (RRF) in a single SQL query.
+- **Qdrant**: Leverages multi-stage prefetch and hybrid scoring.
+- **Milvus**: Utilizes native multi-vector hybrid search features.
 
 ---
 
