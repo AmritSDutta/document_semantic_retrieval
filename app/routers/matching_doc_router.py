@@ -151,9 +151,9 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
     """
     Retrieve items by category with an optional limit.
     """
-    cache = get_cache()
+    cache_ref = get_cache()
     logger.info(f'### Received query -> {req.search_term.strip()[:25]} ..., limit -> {req.limit}')
-    res = await time_coro('LANGCACHE', cache.retrieve(req.search_term.strip()))
+    res = await time_coro('LANGCACHE', cache_ref.retrieve(req.search_term.strip()))
     if res:
         logging.info(f"Cache matched: {len(res)} records returned")
         return res
@@ -161,5 +161,5 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
 
     logger.info(f'Redacted req: query -> {passage_redacted[0][:25]} . . .')
     docs: List[DocumentRecord] = await svc.get_matching_docs_by_embedding(passage_redacted[0], query_emb, req.limit)
-    await cache.save(req.search_term.strip(), docs)
+    await cache_ref.save(req.search_term.strip(), docs)
     return docs
