@@ -83,6 +83,12 @@ class Settings(BaseSettings):
     ARIZE_API_KEY: str = 'arize-api-key'
     ARIZE_ENABLE_TRACING: str = 'true'
 
+    LANGCACHE_API_KEY: str = 'api_key'
+    LANGCACHE_URL: str = 'url'
+    LANGCACHE_ID: str = 'cache_id'
+    LANGCACHE_TTL: int = 300000
+    LANGCACHE_ENABLED: bool = True
+
     @property
     def csv_file_path(self) -> Path:
         """Return absolute, validated path to the CSV."""

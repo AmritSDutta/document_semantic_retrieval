@@ -13,6 +13,7 @@ from app.schema.document_record import DocumentRecord, SearchRequest, Classifica
 from app.service.document_service import DocumentService
 from app.service.embedding.EmbeddingFactory import get_query_embedding_async
 from app.service.llm_classifier import ClassifyLLMService
+from app.service.sematic_cache import SemanticCache
 from app.service.utils.auth import get_api_key
 from app.service.utils.pii_redaction import PII_Redactor
 from app.service.utils.time_helper import time_coro
@@ -21,6 +22,14 @@ logger = logging.getLogger(__name__)
 doc_router = APIRouter(prefix="/docs", tags=["docs"], dependencies=[Security(get_api_key)])
 llm = ClassifyLLMService()
 pii_redactor = PII_Redactor()
+cache: SemanticCache | None = None
+
+
+def get_cache() -> SemanticCache:
+    global cache
+    if cache is None:
+        cache = SemanticCache()
+    return cache
 
 
 def get_document_service() -> DocumentService:
@@ -132,3 +141,24 @@ async def _do_sanitization_moderation_redaction_embedding(passage: str):
 
     moderation_result, (passage_redacted, query_emb) = results
     return passage_redacted, query_emb
+
+
+@doc_router.post("/search_with_cache", status_code=200, response_model=List[DocumentRecord],
+                 dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(5, Duration.SECOND * 1))))])
+@tracer.chain
+async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_document_service)) -> List[DocumentRecord]:
+    """
+    Retrieve items by category with an optional limit.
+    """
+    cache = get_cache()
+    logger.info(f'### Received query -> {req.search_term.strip()[:25]} ..., limit -> {req.limit}')
+    res = await cache.retrieve(req.search_term.strip())
+    if res:
+        logging.info(f"Cache matched: {res}")
+        return res
+    passage_redacted, query_emb = await _do_sanitization_moderation_redaction_embedding(req.search_term.strip())
+
+    logger.info(f'Redacted req: query -> {passage_redacted[0][:25]} . . .')
+    docs: List[DocumentRecord] = await svc.get_matching_docs_by_embedding(passage_redacted[0], query_emb, req.limit)
+    await cache.save(req.search_term.strip(), docs)
+    return docs
