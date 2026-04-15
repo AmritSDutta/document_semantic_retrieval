@@ -8,12 +8,13 @@ from pyrate_limiter import Limiter, Rate, Duration
 
 from app.config.arize_confg import tracer
 from app.database.document_repository import DocumentRepository
-from app.routers.request_validator import sanitize_passage, do_moderation_checking, do_moderation_checking_mistral
+from app.routers.request_validator import sanitize_passage, do_moderation_checking_mistral
 from app.schema.document_record import DocumentRecord, SearchRequest, ClassificationResult
+from app.service.cache.CacheFactory import get_cache_impl
 from app.service.document_service import DocumentService
 from app.service.embedding.EmbeddingFactory import get_query_embedding_async
 from app.service.llm_classifier import ClassifyLLMService
-from app.service.sematic_cache import SemanticCache
+from app.service.cache.sematic_cache import SemanticCache
 from app.service.utils.auth import get_api_key
 from app.service.utils.pii_redaction import PII_Redactor
 from app.service.utils.time_helper import time_coro
@@ -28,7 +29,7 @@ cache: SemanticCache | None = None
 def get_cache() -> SemanticCache:
     global cache
     if cache is None:
-        cache = SemanticCache()
+        cache = get_cache_impl()
     return cache
 
 
@@ -152,9 +153,9 @@ async def search_docs(req: SearchRequest, svc: DocumentService = Depends(get_doc
     """
     cache = get_cache()
     logger.info(f'### Received query -> {req.search_term.strip()[:25]} ..., limit -> {req.limit}')
-    res = await cache.retrieve(req.search_term.strip())
+    res = await time_coro('LANGCACHE', cache.retrieve(req.search_term.strip()))
     if res:
-        logging.info(f"Cache matched: {res}")
+        logging.info(f"Cache matched: {len(res)} records returned")
         return res
     passage_redacted, query_emb = await _do_sanitization_moderation_redaction_embedding(req.search_term.strip())
 

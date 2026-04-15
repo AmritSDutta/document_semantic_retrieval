@@ -1,20 +1,24 @@
-import logging
 import json
+import logging
 from typing import List
+
 from langcache import LangCache
-from langcache.models import SearchResponse, CacheEntry, SearchStrategy
+from langcache.models import SearchStrategy, SearchResponse
+
 from app.config.Settings import get_settings
 from app.schema.document_record import DocumentRecord
+from app.service.cache.sematic_cache import SemanticCache
 logger = logging.getLogger(__name__)
 
 
-class SemanticCache:
+class RedisSemanticCache(SemanticCache):
     def __init__(self):
         self.cache: LangCache = LangCache(
             server_url=get_settings().LANGCACHE_URL,
             cache_id=get_settings().LANGCACHE_ID,
             api_key=get_settings().LANGCACHE_API_KEY,
         )
+        logging.info("Redis LANGCACHE initialized")
 
     async def save(self, prompt: str, response: List[DocumentRecord]):
         # SDK requires 'response' to be a str; serialize Pydantic models to JSON
