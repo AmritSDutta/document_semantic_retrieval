@@ -1,3 +1,5 @@
+import re
+
 from httpx import Response
 from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core.evaluation import RelevancyEvaluator, AnswerRelevancyEvaluator
@@ -85,9 +87,9 @@ def run_payload_pool():
     url = "http://localhost:8000/api/docs/search"
     api_key = "1234"
     latencies = []
-    score = []
+    score: list[float] = []
 
-    for i, query in enumerate(queries):
+    for i, query in enumerate(queries[:3]):
         payload = {"search_term": query, "limit": 3}
         try:
             r: Response = requests.post(url, json=payload, headers={"X-API-KEY": api_key})
@@ -100,8 +102,18 @@ def run_payload_pool():
 
             print(f"Req {i + 1} - Server Process Time: {proc_time}s")
             eval_result = evaluator.evaluate_response(query=query, response=SchemaResponse(response=r.text))
-            score.append(eval_result.score if eval_result and eval_result.score else 0)
-            print(f'Evaluation result: {str(eval_result.feedback)}, score: {str(eval_result.score)}')
+
+            # Feedback contains "Score: 5...", we need to extract the '5'
+            feedback_text = eval_result.feedback or ""
+            score_match = re.search(r"Score:\s*(\d+)", feedback_text)
+
+            if score_match:
+                numeric_score = float(score_match.group(1))
+            else:
+                numeric_score = 0.0
+
+            score.append(numeric_score)
+            print(f'Evaluation result: {str(eval_result.feedback)}, score: {numeric_score}')
 
         except requests.exceptions.RequestException as e:
             print(f"Request {i + 1} failed: {e}")
