@@ -22,11 +22,11 @@ class TestMatchingDocRouter:
         mock_svc.reset_mock()
 
     def test_search_docs(self, mock_search_request, blockchain_record):
-        with patch("app.routers.matching_doc_router.do_moderation_checking", new_callable=AsyncMock) as mock_mod, \
+        with patch("app.routers.matching_doc_router.do_moderation_checking_mistral", new_callable=AsyncMock) as mock_mod, \
                 patch("app.routers.matching_doc_router.pii_redactor.do_pii_redaction_text",
                       new_callable=AsyncMock) as mock_pii:
             mock_pii.return_value = ["Blockchain developers"]
-            mock_svc.get_matching_docs.return_value = [blockchain_record.model_dump()]
+            mock_svc.get_matching_docs_by_embedding.return_value = [blockchain_record.model_dump()]
 
             response = client.post(
                 "/docs/search",
@@ -39,10 +39,10 @@ class TestMatchingDocRouter:
             assert response.json()[0]["resume_id"] == "REAL_2080"
             mock_mod.assert_awaited_once()
             mock_pii.assert_awaited_once_with(["Blockchain developers"])
-            mock_svc.get_matching_docs.assert_awaited_once()
+            mock_svc.get_matching_docs_by_embedding.assert_awaited_once()
 
     def test_classify_doc(self, mock_topics):
-        with patch("app.routers.matching_doc_router.do_moderation_checking", new_callable=AsyncMock) as mock_mod, \
+        with patch("app.routers.matching_doc_router.do_moderation_checking_mistral", new_callable=AsyncMock) as mock_mod, \
                 patch("app.routers.matching_doc_router.pii_redactor.do_pii_redaction_text",
                       new_callable=AsyncMock) as mock_pii, \
                 patch("app.routers.matching_doc_router.llm.llm_classify_request", new_callable=AsyncMock) as mock_llm:
@@ -63,7 +63,7 @@ class TestMatchingDocRouter:
             mock_llm.assert_awaited_once()
 
     def test_classify_and_search(self, mock_topics, blockchain_record):
-        with patch("app.routers.matching_doc_router.do_moderation_checking", new_callable=AsyncMock) as mock_mod, \
+        with patch("app.routers.matching_doc_router.do_moderation_checking_mistral", new_callable=AsyncMock) as mock_mod, \
                 patch("app.routers.matching_doc_router.pii_redactor.do_pii_redaction_text",
                       new_callable=AsyncMock) as mock_pii, \
                 patch("app.routers.matching_doc_router.llm.llm_classify_request", new_callable=AsyncMock) as mock_llm:
@@ -90,7 +90,7 @@ class TestMatchingDocRouter:
             mock_train.assert_called_once()
 
     def test_classify_and_search_classic_ml(self, mock_topics, blockchain_record):
-        with patch("app.routers.matching_doc_router.do_moderation_checking", new_callable=AsyncMock) as mock_mod, \
+        with patch("app.routers.matching_doc_router.do_moderation_checking_mistral", new_callable=AsyncMock) as mock_mod, \
                 patch("app.routers.matching_doc_router.pii_redactor.do_pii_redaction_text",
                       new_callable=AsyncMock) as mock_pii, \
                 patch("app.service.classic_ml.berttopic_modeling.infer_topic_model") as mock_topic:
